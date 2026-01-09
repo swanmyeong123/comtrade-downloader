@@ -22,6 +22,11 @@ UK_CODE = "826"
 REPORTER_GROUPS = {
     "직접 입력 (Custom)": "",
     "프랑스 (France)": "251",
+    "폴란드 (Poland)": "616",
+    "독일 (Germany)": "276",
+    "스페인 (Spain)": "724",
+    "벨기에 (Belgium)": "056",
+    "스웨덴 (Sweden)": "752",
     "한국 (Korea)": "410",
     "EU 27 전체 (All EU Members)": EU27_STR,
     "중국 (China)": "156",
