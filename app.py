@@ -21,14 +21,13 @@ UK_CODE = "826"
 # [보고 국가(Reporter) 그룹]
 REPORTER_GROUPS = {
     "직접 입력 (Custom)": "",
-    "프랑스 (France)": "251",
+    "EU 27 전체 (All EU Members)": EU27_STR,
     "폴란드 (Poland)": "616",
     "독일 (Germany)": "276",
     "스페인 (Spain)": "724",
     "벨기에 (Belgium)": "056",
     "스웨덴 (Sweden)": "752",
     "한국 (Korea)": "410",
-    "EU 27 전체 (All EU Members)": EU27_STR,
     "중국 (China)": "156",
     "미국 (USA)": "842",
 }
@@ -260,3 +259,4 @@ if st.button("데이터 수집 시작", type="primary"):
             )
         else:
             st.warning("데이터가 없습니다.")
+
