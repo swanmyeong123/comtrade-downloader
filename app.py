@@ -489,9 +489,11 @@ def preprocess_dataframe(df, original_hs_codes):
     
     return result
 
-def create_alluvial_diagram(df, font_size=12, reporter_color='#2E86AB', 
+def create_alluvial_diagram(df, font_size=12, font_color='#000000',
+                            reporter_color='#2E86AB', 
                             hscode_color='#A23B72', partner_color='#F18F01',
                             link_opacity=0.3, diagram_height=600, 
+                            node_thickness=20,
                             group_by_continent=False, show_title=True,
                             merge_eu27_reporter=False):
     """
@@ -500,11 +502,13 @@ def create_alluvial_diagram(df, font_size=12, reporter_color='#2E86AB',
     
     Parameters:
     - font_size: 폰트 크기 (기본값: 12)
+    - font_color: 폰트 색상 (HEX)
     - reporter_color: Reporter 노드 색상
     - hscode_color: HS Code 노드 색상
     - partner_color: Partner 노드 색상
     - link_opacity: 링크 투명도 (0~1)
     - diagram_height: 다이어그램 높이 (px)
+    - node_thickness: 노드 두께 (기본값: 20)
     - group_by_continent: True면 국가를 대륙별로 그룹화
     - show_title: True면 제목 표시 (이미지 다운로드 시 False)
     - merge_eu27_reporter: True면 EU27 국가 Reporter를 "EU27"로 통합
@@ -625,7 +629,7 @@ def create_alluvial_diagram(df, font_size=12, reporter_color='#2E86AB',
     fig = go.Figure(data=[go.Sankey(
         node=dict(
             pad=15,
-            thickness=20,
+            thickness=node_thickness,
             line=dict(color="black", width=0.5),
             label=all_nodes,
             color=node_colors
@@ -642,7 +646,7 @@ def create_alluvial_diagram(df, font_size=12, reporter_color='#2E86AB',
     
     fig.update_layout(
         title_text=title_text,
-        font_size=font_size,
+        font=dict(size=font_size, color=font_color),
         height=diagram_height
     )
     
@@ -698,13 +702,23 @@ with st.sidebar:
     
     with st.expander("세부 설정"):
         diagram_font_size = st.slider("폰트 크기", min_value=8, max_value=20, value=12)
+        font_color = st.text_input("폰트 색상 (HEX)", value="#000000")
         diagram_height = st.slider("다이어그램 높이 (px)", min_value=400, max_value=1000, value=600, step=50)
+        node_thickness = st.slider("노드 두께", min_value=10, max_value=40, value=20, step=2)
         link_opacity = st.slider("링크 투명도", min_value=0.1, max_value=0.8, value=0.3, step=0.1)
         
         st.caption("노드 색상 (HEX)")
         reporter_color = st.text_input("Reporter 색상", value=theme_colors["reporter"])
         hscode_color = st.text_input("HS Code 색상", value=theme_colors["hscode"])
         partner_color = st.text_input("Partner 색상", value=theme_colors["partner"])
+    
+    st.write("---")
+    st.subheader("📥 다운로드 설정")
+    download_format = st.selectbox(
+        "다운로드 양식:",
+        ["PNG", "JPG", "PPTX", "모두 (PNG + JPG + PPTX)"]
+    )
+
 
 
 # 메인 UI
@@ -837,11 +851,13 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
         fig = create_alluvial_diagram(
             st.session_state['final_df'],
             font_size=diagram_font_size,
+            font_color=font_color,
             reporter_color=reporter_color,
             hscode_color=hscode_color,
             partner_color=partner_color,
             link_opacity=link_opacity,
             diagram_height=diagram_height,
+            node_thickness=node_thickness,
             group_by_continent=group_by_continent,
             show_title=True,
             merge_eu27_reporter=merge_eu27
@@ -849,76 +865,65 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
         if fig:
             st.plotly_chart(fig, use_container_width=True, key="main_diagram")
             
-            # 이미지 다운로드 버튼 (제목 없이)
+            # 다운로드용 다이어그램 (제목 없이)
             fig_download = create_alluvial_diagram(
                 st.session_state['final_df'],
                 font_size=diagram_font_size,
+                font_color=font_color,
                 reporter_color=reporter_color,
                 hscode_color=hscode_color,
                 partner_color=partner_color,
                 link_opacity=link_opacity,
                 diagram_height=diagram_height,
+                node_thickness=node_thickness,
                 group_by_continent=group_by_continent,
                 show_title=False,
                 merge_eu27_reporter=merge_eu27
             )
             
-            # 다운로드 버튼들 (PNG, PPT)
-            col_down1, col_down2 = st.columns(2)
-            
-            # PNG로 저장
-            with col_down1:
-                try:
-                    img_bytes = fig_download.to_image(format="png", width=1200, height=diagram_height, scale=2)
-                    st.download_button(
-                        label="📥 이미지 다운로드 (PNG)",
-                        data=img_bytes,
-                        file_name="alluvial_diagram.png",
-                        mime="image/png",
-                    )
-                except Exception as img_error:
-                    st.caption("이미지: kaleido 패키지 필요")
-            
-            # PPT로 저장
-            with col_down2:
-                try:
-                    from pptx import Presentation
-                    from pptx.util import Inches, Pt
-                    import io
-                    
-                    # 이미지를 먼저 생성
-                    img_bytes = fig_download.to_image(format="png", width=1200, height=diagram_height, scale=2)
-                    
-                    # PPT 생성
-                    prs = Presentation()
-                    prs.slide_width = Inches(13.333)  # 16:9 기준
-                    prs.slide_height = Inches(7.5)
-                    
-                    # 슬라이드 추가
-                    blank_slide_layout = prs.slide_layouts[6]  # 빈 슬라이드
-                    slide = prs.slides.add_slide(blank_slide_layout)
-                    
-                    # 이미지를 슬라이드에 추가
-                    img_stream = io.BytesIO(img_bytes)
-                    left = Inches(0.5)
-                    top = Inches(0.5)
-                    width = Inches(12.333)
-                    slide.shapes.add_picture(img_stream, left, top, width=width)
-                    
-                    # PPT를 바이트로 저장
-                    ppt_stream = io.BytesIO()
-                    prs.save(ppt_stream)
-                    ppt_bytes = ppt_stream.getvalue()
-                    
-                    st.download_button(
-                        label="📥 PPT 다운로드",
-                        data=ppt_bytes,
-                        file_name="alluvial_diagram.pptx",
-                        mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                    )
-                except Exception as ppt_error:
-                    st.caption("PPT: python-pptx 패키지 필요")
+            # 다운로드 버튼들 (선택한 양식에 따라)
+            try:
+                from pptx import Presentation
+                from pptx.util import Inches
+                import io
+                
+                # 이미지 생성 (PNG/JPG 공통)
+                img_bytes_png = fig_download.to_image(format="png", width=1200, height=diagram_height, scale=2)
+                img_bytes_jpg = fig_download.to_image(format="jpeg", width=1200, height=diagram_height, scale=2)
+                
+                # PPT 생성
+                prs = Presentation()
+                prs.slide_width = Inches(13.333)
+                prs.slide_height = Inches(7.5)
+                blank_slide_layout = prs.slide_layouts[6]
+                slide = prs.slides.add_slide(blank_slide_layout)
+                img_stream = io.BytesIO(img_bytes_png)
+                slide.shapes.add_picture(img_stream, Inches(0.5), Inches(0.5), width=Inches(12.333))
+                ppt_stream = io.BytesIO()
+                prs.save(ppt_stream)
+                ppt_bytes = ppt_stream.getvalue()
+                
+                # 선택한 양식에 따라 다운로드 버튼 표시
+                if download_format == "PNG":
+                    st.download_button("📥 PNG 다운로드", img_bytes_png, "alluvial_diagram.png", "image/png")
+                elif download_format == "JPG":
+                    st.download_button("📥 JPG 다운로드", img_bytes_jpg, "alluvial_diagram.jpg", "image/jpeg")
+                elif download_format == "PPTX":
+                    st.download_button("📥 PPTX 다운로드", ppt_bytes, "alluvial_diagram.pptx", 
+                                       "application/vnd.openxmlformats-officedocument.presentationml.presentation")
+                else:  # 모두
+                    col_d1, col_d2, col_d3 = st.columns(3)
+                    with col_d1:
+                        st.download_button("📥 PNG", img_bytes_png, "alluvial_diagram.png", "image/png")
+                    with col_d2:
+                        st.download_button("📥 JPG", img_bytes_jpg, "alluvial_diagram.jpg", "image/jpeg")
+                    with col_d3:
+                        st.download_button("📥 PPTX", ppt_bytes, "alluvial_diagram.pptx",
+                                           "application/vnd.openxmlformats-officedocument.presentationml.presentation")
+            except Exception as download_error:
+                st.caption(f"다운로드 기능을 위해 kaleido, python-pptx 패키지가 필요합니다.")
         else:
             st.info("다이어그램을 생성할 데이터가 충분하지 않습니다. (물량 데이터 필요)")
     except Exception as e:
         st.error(f"다이어그램 생성 오류: {e}")
+
