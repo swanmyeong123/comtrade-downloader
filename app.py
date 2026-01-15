@@ -563,7 +563,10 @@ def create_alluvial_diagram(df, font_size=12, reporter_color='#2E86AB',
     # 노드 목록 생성
     reporters = df_clean['reporterName'].unique().tolist()
     cmdcodes = df_clean['cmdCode'].unique().tolist()
-    partners = df_clean['partnerName'].unique().tolist()
+    
+    # Partner를 물량 기준 내림차순 정렬
+    partner_volumes = df_clean.groupby('partnerName')['netWgt (kg)'].sum().sort_values(ascending=False)
+    partners = partner_volumes.index.tolist()
     
     # cmdCode에 접두사 추가 (중복 방지)
     cmdcodes_prefixed = [f"HS-{c}" for c in cmdcodes]
