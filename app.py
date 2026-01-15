@@ -9,7 +9,7 @@ from io import BytesIO
 # EU 27개국 리스트 (브렉시트 이후)
 EU27_LIST = [
     "040", "056", "100", "191", "196", "203", "208", "233", "246", "251", 
-    "276", "300", "348", "372", "380", "428", "440", "442", "470", "528", 
+    "276", "300", "348", "372", "380", "428", "440", "442", "470", "528", f
     "616", "620", "703", "705", "724", "752", "242"
 ]
 EU27_STR = ",".join(EU27_LIST)
@@ -716,7 +716,7 @@ if st.button("데이터 수집 시작", type="primary"):
             hs_codes = df_input.iloc[:, 0].dropna().tolist()
         else:
             stringio = uploaded_file.getvalue().decode("utf-8")
-            hs_codes = [line.strip() for line in stringio.split('
+           hs_codes = [line.strip() for line in stringio.split('\n
 ') if line.strip()]
         
         # 원본 HS 코드 형식 보존 (중복 제거 전)
@@ -835,3 +835,4 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
             st.info("다이어그램을 생성할 데이터가 충분하지 않습니다. (물량 데이터 필요)")
     except Exception as e:
         st.error(f"다이어그램 생성 오류: {e}")
+
