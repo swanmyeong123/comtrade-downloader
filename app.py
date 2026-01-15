@@ -499,7 +499,9 @@ def create_alluvial_diagram(df, font_size=20,
                             node_thickness=20,
                             group_by_continent=False, 
                             custom_title="",
-                            merge_eu27_reporter=False):
+                            merge_eu27_reporter=False,
+                            show_hscode_percentage=False,
+                            show_partner_percentage=False):
     """
     Plotly Sankey diagram 생성
     Reporter → cmdCode → Partner (두께: netWgt)
@@ -518,6 +520,8 @@ def create_alluvial_diagram(df, font_size=20,
     - group_by_continent: True면 국가를 대륙별로 그룹화
     - custom_title: 제목 문자열 (빈 문자열이면 표시 안함)
     - merge_eu27_reporter: True면 EU27 국가 Reporter를 "EU27"로 통합
+    - show_hscode_percentage: True면 HS Code에 비율 표시
+    - show_partner_percentage: True면 Partner에 비율 표시
     """
     import plotly.graph_objects as go
     
@@ -578,22 +582,47 @@ def create_alluvial_diagram(df, font_size=20,
     partner_volumes = df_clean.groupby('partnerName')['netWgt (kg)'].sum().sort_values(ascending=False)
     partners = partner_volumes.index.tolist()
     
-    # cmdCode에 접두사 추가 (중복 방지)
-    cmdcodes_prefixed = [f"HS-{c}" for c in cmdcodes]
+    # 전체 물량 계산 (비율 계산용)
+    total_volume = df_clean['netWgt (kg)'].sum()
     
-    all_nodes = reporters + cmdcodes_prefixed + partners
+    # HS Code별 물량 계산
+    hscode_volumes = df_clean.groupby('cmdCode')['netWgt (kg)'].sum()
+    
+    # cmdCode에 접두사 추가 (비율 포함 여부에 따라)
+    cmdcodes_prefixed = []
+    for c in cmdcodes:
+        if show_hscode_percentage and total_volume > 0:
+            pct = (hscode_volumes.get(c, 0) / total_volume) * 100
+            cmdcodes_prefixed.append(f"HS-{c}\n({pct:.1f}%)")
+        else:
+            cmdcodes_prefixed.append(f"HS-{c}")
+    
+    # Partner 레이블 (비율 포함 여부에 따라)
+    partners_labeled = []
+    for p in partners:
+        if show_partner_percentage and total_volume > 0:
+            pct = (partner_volumes.get(p, 0) / total_volume) * 100
+            partners_labeled.append(f"{p}\n({pct:.1f}%)")
+        else:
+            partners_labeled.append(p)
+    
+    all_nodes = reporters + cmdcodes_prefixed + partners_labeled
     node_indices = {node: i for i, node in enumerate(all_nodes)}
+    
+    # 원본 cmdCode와 레이블 매핑
+    cmdcode_to_label = {c: cmdcodes_prefixed[i] for i, c in enumerate(cmdcodes)}
+    partner_to_label = {p: partners_labeled[i] for i, p in enumerate(partners)}
     
     # 링크 1: Reporter → cmdCode
     link1 = df_clean.groupby(['reporterName', 'cmdCode'])['netWgt (kg)'].sum().reset_index()
     sources1 = [node_indices[r] for r in link1['reporterName']]
-    targets1 = [node_indices[f"HS-{c}"] for c in link1['cmdCode']]
+    targets1 = [node_indices[cmdcode_to_label[c]] for c in link1['cmdCode']]
     values1 = link1['netWgt (kg)'].tolist()
     
     # 링크 2: cmdCode → Partner
     link2 = df_clean.groupby(['cmdCode', 'partnerName'])['netWgt (kg)'].sum().reset_index()
-    sources2 = [node_indices[f"HS-{c}"] for c in link2['cmdCode']]
-    targets2 = [node_indices[p] for p in link2['partnerName']]
+    sources2 = [node_indices[cmdcode_to_label[c]] for c in link2['cmdCode']]
+    targets2 = [node_indices[partner_to_label[p]] for p in link2['partnerName']]
     values2 = link2['netWgt (kg)'].tolist()
     
     # 모든 링크 결합
@@ -626,12 +655,18 @@ def create_alluvial_diagram(df, font_size=20,
         elif node.startswith('HS-'):
             node_colors.append(hscode_color)
             font_colors.append(hscode_font_color)
-        elif node in continent_colors:
-            node_colors.append(continent_colors[node])
-            font_colors.append(partner_font_color)
         else:
-            node_colors.append(partner_color)
-            font_colors.append(partner_font_color)
+            # Partner 노드 (대륙 체크)
+            matched_continent = False
+            for continent_name, continent_color in continent_colors.items():
+                if node.startswith(continent_name):
+                    node_colors.append(continent_color)
+                    font_colors.append(partner_font_color)
+                    matched_continent = True
+                    break
+            if not matched_continent:
+                node_colors.append(partner_color)
+                font_colors.append(partner_font_color)
     
     # 링크 색상 (회색 + 투명도)
     link_color = f'rgba(100, 100, 100, {link_opacity})'
@@ -737,6 +772,10 @@ with st.sidebar:
             custom_title = st.text_input("제목 입력", value="Alluvial Diagram: Reporter → HS Code → Partner")
         else:
             custom_title = ""
+        
+        st.caption("비율 표시 (##.#%)")
+        show_hscode_percentage = st.checkbox("HS Code 비율 표시", value=False)
+        show_partner_percentage = st.checkbox("Partner 비율 표시", value=False)
 
 
 
@@ -881,7 +920,9 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
             node_thickness=node_thickness,
             group_by_continent=group_by_continent,
             custom_title=custom_title,
-            merge_eu27_reporter=merge_eu27
+            merge_eu27_reporter=merge_eu27,
+            show_hscode_percentage=show_hscode_percentage,
+            show_partner_percentage=show_partner_percentage
         )
         if fig:
             st.plotly_chart(fig, use_container_width=True, key="main_diagram")
@@ -901,7 +942,9 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
                 node_thickness=node_thickness,
                 group_by_continent=group_by_continent,
                 custom_title="",  # 다운로드용은 제목 없음
-                merge_eu27_reporter=merge_eu27
+                merge_eu27_reporter=merge_eu27,
+                show_hscode_percentage=show_hscode_percentage,
+                show_partner_percentage=show_partner_percentage
             )
             
             # 다운로드 버튼들 (PNG, JPG, PPTX)
