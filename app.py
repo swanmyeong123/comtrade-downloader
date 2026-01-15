@@ -433,6 +433,7 @@ def preprocess_dataframe(df, original_hs_codes):
         'period',
         'reporterCode', 'reporterName',
         'partnerCode', 'partnerName',
+        'flowCode',
         'cmdCode',
         'netWgt', 'primaryValue'
     ]
@@ -589,3 +590,4 @@ if st.button("데이터 수집 시작", type="primary"):
             )
         else:
             st.warning("데이터가 없습니다.")
+
