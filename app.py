@@ -497,7 +497,8 @@ def create_alluvial_diagram(df, font_size=20,
                             partner_font_color='#000000',
                             link_opacity=0.3, diagram_height=600, 
                             node_thickness=20,
-                            group_by_continent=False, show_title=True,
+                            group_by_continent=False, 
+                            custom_title="",
                             merge_eu27_reporter=False):
     """
     Plotly Sankey diagram 생성
@@ -515,7 +516,7 @@ def create_alluvial_diagram(df, font_size=20,
     - diagram_height: 다이어그램 높이 (px)
     - node_thickness: 노드 두께 (기본값: 20)
     - group_by_continent: True면 국가를 대륙별로 그룹화
-    - show_title: True면 제목 표시 (이미지 다운로드 시 False)
+    - custom_title: 제목 문자열 (빈 문자열이면 표시 안함)
     - merge_eu27_reporter: True면 EU27 국가 Reporter를 "EU27"로 통합
     """
     import plotly.graph_objects as go
@@ -653,10 +654,8 @@ def create_alluvial_diagram(df, font_size=20,
         )
     )])
     
-    title_text = "Alluvial Diagram: Reporter → HS Code → Partner (Weight: kg)" if show_title else ""
-    
     fig.update_layout(
-        title_text=title_text,
+        title_text=custom_title,
         font=dict(size=font_size),
         height=diagram_height
     )
@@ -727,22 +726,17 @@ with st.sidebar:
             partner_color = st.color_picker("Partner", value=theme_colors["partner"])
         
         # 폰트 색상 (전체 레이블에 적용 - Plotly Sankey 제한)
+        # 폰트 색상 (전체 레이블에 적용 - Plotly Sankey 제한)
         reporter_font_color = st.color_picker("폰트 색상 (레이블)", value="#000000")
         hscode_font_color = reporter_font_color  # 동일 색상 사용
         partner_font_color = reporter_font_color  # 동일 색상 사용
-    
-    st.write("---")
-    st.subheader("📥 다운로드 설정")
-    download_format = st.selectbox(
-        "다운로드 양식:",
-        ["PNG", "JPG", "PPTX", "모두 (PNG + JPG + PPTX)"]
-    )
-    
-    # 다운로드 준비 상태 표시
-    if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
-        st.success(f"✅ 다운로드 준비 완료 ({download_format})")
-    else:
-        st.info("💡 데이터 수집 후 다운로드 가능합니다.")
+        
+        st.caption("제목 설정")
+        show_diagram_title = st.checkbox("제목 표시", value=True)
+        if show_diagram_title:
+            custom_title = st.text_input("제목 입력", value="Alluvial Diagram: Reporter → HS Code → Partner")
+        else:
+            custom_title = ""
 
 
 
@@ -886,7 +880,7 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
             diagram_height=diagram_height,
             node_thickness=node_thickness,
             group_by_continent=group_by_continent,
-            show_title=True,
+            custom_title=custom_title,
             merge_eu27_reporter=merge_eu27
         )
         if fig:
@@ -906,11 +900,11 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
                 diagram_height=diagram_height,
                 node_thickness=node_thickness,
                 group_by_continent=group_by_continent,
-                show_title=False,
+                custom_title="",  # 다운로드용은 제목 없음
                 merge_eu27_reporter=merge_eu27
             )
             
-            # 다운로드 버튼들 (선택한 양식에 따라)
+            # 다운로드 버튼들 (PNG, JPG, PPTX)
             try:
                 from pptx import Presentation
                 from pptx.util import Inches
@@ -932,25 +926,17 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
                 prs.save(ppt_stream)
                 ppt_bytes = ppt_stream.getvalue()
                 
-                # 선택한 양식에 따라 다운로드 버튼 표시
-                if download_format == "PNG":
-                    st.download_button("📥 PNG 다운로드", img_bytes_png, "alluvial_diagram.png", "image/png")
-                elif download_format == "JPG":
-                    st.download_button("📥 JPG 다운로드", img_bytes_jpg, "alluvial_diagram.jpg", "image/jpeg")
-                elif download_format == "PPTX":
-                    st.download_button("📥 PPTX 다운로드", ppt_bytes, "alluvial_diagram.pptx", 
+                # 다운로드 버튼 3개 표시
+                col_d1, col_d2, col_d3 = st.columns(3)
+                with col_d1:
+                    st.download_button("📥 PNG", img_bytes_png, "alluvial_diagram.png", "image/png")
+                with col_d2:
+                    st.download_button("📥 JPG", img_bytes_jpg, "alluvial_diagram.jpg", "image/jpeg")
+                with col_d3:
+                    st.download_button("📥 PPTX", ppt_bytes, "alluvial_diagram.pptx",
                                        "application/vnd.openxmlformats-officedocument.presentationml.presentation")
-                else:  # 모두
-                    col_d1, col_d2, col_d3 = st.columns(3)
-                    with col_d1:
-                        st.download_button("📥 PNG", img_bytes_png, "alluvial_diagram.png", "image/png")
-                    with col_d2:
-                        st.download_button("📥 JPG", img_bytes_jpg, "alluvial_diagram.jpg", "image/jpeg")
-                    with col_d3:
-                        st.download_button("📥 PPTX", ppt_bytes, "alluvial_diagram.pptx",
-                                           "application/vnd.openxmlformats-officedocument.presentationml.presentation")
             except Exception as download_error:
-                st.caption(f"다운로드 기능을 위해 kaleido, python-pptx 패키지가 필요합니다.")
+                st.caption("다운로드를 위해 kaleido, python-pptx 패키지가 필요합니다.")
         else:
             st.info("다이어그램을 생성할 데이터가 충분하지 않습니다. (물량 데이터 필요)")
     except Exception as e:
