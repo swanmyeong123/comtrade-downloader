@@ -13,7 +13,7 @@ EU27_LIST = [
 EU27_STR = ",".join(EU27_LIST)
 
 # CPTPP 등 기타 그룹
-CPTPP_11_STR = "036,096,124,152,392,458,484,554,604,702,704" # 영국 미포함
+CPTPP_11_STR = "036,096,124,152,392,458,484,554,604,702,704"  # 영국 미포함
 UK_CODE = "826"
 
 # UN M49 국가 코드 → 영문 국가명 매핑
@@ -25,49 +25,26 @@ COUNTRY_NAMES = {
     "019": "Americas",
     "142": "Asia",
     "150": "Europe",
-
     # EU 27 Countries
-    "040": "Austria",
-    "056": "Belgium",
-    "100": "Bulgaria",
-    "191": "Croatia",
-    "196": "Cyprus",
-    "203": "Czechia",
-    "208": "Denmark",
-    "233": "Estonia",
-    "246": "Finland",
-    "251": "France",
+    "040": "Austria", "056": "Belgium", "100": "Bulgaria", "191": "Croatia", "196": "Cyprus",
+    "203": "Czechia", "208": "Denmark", "233": "Estonia", "246": "Finland", "251": "France",
     "242": "Fiji", # Note: This might be an error in EU27_LIST, as Fiji is not in EU
-    "276": "Germany",
-    "300": "Greece",
-    "348": "Hungary",
-    "372": "Ireland",
-    "380": "Italy",
-    "428": "Latvia",
-    "440": "Lithuania",
-    "442": "Luxembourg",
-    "470": "Malta",
-    "528": "Netherlands",
-    "616": "Poland",
-    "620": "Portugal",
-    "703": "Slovakia",
-    "705": "Slovenia",
-    "724": "Spain",
-    "752": "Sweden",
-
+    "276": "Germany", "300": "Greece", "348": "Hungary", "372": "Ireland", "380": "Italy",
+    "428": "Latvia", "440": "Lithuania", "442": "Luxembourg", "470": "Malta", "528": "Netherlands",
+    "616": "Poland", "620": "Portugal", "703": "Slovakia", "705": "Slovenia", "724": "Spain", "752": "Sweden",
     # Other Major Countries
     "004": "Afghanistan", "008": "Albania", "012": "Algeria", "020": "Andorra", "024": "Angola",
     "028": "Antigua and Barbuda", "031": "Azerbaijan", "032": "Argentina", "036": "Australia",
     "044": "Bahamas", "048": "Bahrain", "050": "Bangladesh", "051": "Armenia", "052": "Barbados",
     "064": "Bhutan", "068": "Bolivia", "070": "Bosnia and Herzegovina", "072": "Botswana",
     "076": "Brazil", "084": "Belize", "090": "Solomon Islands", "096": "Brunei Darussalam",
-    "104": "Myanmar", "108": "Burundi", "112": "Belarus", "116": "Cambodia", "120": "Cameroon",
-    "124": "Canada", "132": "Cabo Verde", "140": "Central African Republic", "144": "Sri Lanka",
-    "148": "Chad", "152": "Chile", "156": "China", "158": "Taiwan", "170": "Colombia",
-    "174": "Comoros", "178": "Congo", "180": "DR Congo", "184": "Cook Islands", "188": "Costa Rica",
-    "192": "Cuba", "204": "Benin", "212": "Dominica", "214": "Dominican Republic", "218": "Ecuador",
-    "222": "El Salvador", "226": "Equatorial Guinea", "231": "Ethiopia", "232": "Eritrea",
-    "234": "Faroe Islands", "238": "Falkland Islands", "242": "Fiji", "250": "France",
+    "104": "Myanmar", "108": "Burundi", "112": "Belarus", "116": "Cambodia",
+    "120": "Cameroon", "124": "Canada", "132": "Cabo Verde", "140": "Central African Republic",
+    "144": "Sri Lanka", "148": "Chad", "152": "Chile", "156": "China", "158": "Taiwan",
+    "170": "Colombia", "174": "Comoros", "178": "Congo", "180": "DR Congo", "184": "Cook Islands",
+    "188": "Costa Rica", "192": "Cuba", "204": "Benin", "212": "Dominica", "214": "Dominican Republic",
+    "218": "Ecuador", "222": "El Salvador", "226": "Equatorial Guinea", "231": "Ethiopia",
+    "232": "Eritrea", "234": "Faroe Islands", "238": "Falkland Islands", "242": "Fiji", "250": "France",
     "254": "French Guiana", "258": "French Polynesia", "262": "Djibouti", "266": "Gabon",
     "268": "Georgia", "270": "Gambia", "275": "Palestine", "288": "Ghana", "292": "Gibraltar",
     "296": "Kiribati", "304": "Greenland", "308": "Grenada", "312": "Guadeloupe", "316": "Guam",
@@ -81,27 +58,27 @@ COUNTRY_NAMES = {
     "478": "Mauritania", "480": "Mauritius", "484": "Mexico", "492": "Monaco", "496": "Mongolia",
     "498": "Moldova", "499": "Montenegro", "500": "Montserrat", "504": "Morocco", "508": "Mozambique",
     "512": "Oman", "516": "Namibia", "520": "Nauru", "524": "Nepal", "530": "Netherlands Antilles",
-    "531": "Curacao", "533": "Aruba", "534": "Sint Maarten", "540": "New Caledonia",
-    "548": "Vanuatu", "554": "New Zealand", "558": "Nicaragua", "562": "Niger", "566": "Nigeria",
-    "570": "Niue", "574": "Norfolk Island", "578": "Norway", "580": "Northern Mariana Islands",
-    "583": "Micronesia", "584": "Marshall Islands", "585": "Palau", "586": "Pakistan",
-    "591": "Panama", "598": "Papua New Guinea", "600": "Paraguay", "604": "Peru", "608": "Philippines",
+    "531": "Curacao", "533": "Aruba", "534": "Sint Maarten", "540": "New Caledonia", "548": "Vanuatu",
+    "554": "New Zealand", "558": "Nicaragua", "562": "Niger", "566": "Nigeria", "570": "Niue",
+    "574": "Norfolk Island", "578": "Norway", "580": "Northern Mariana Islands", "583": "Micronesia",
+    "584": "Marshall Islands", "585": "Palau", "586": "Pakistan", "591": "Panama",
+    "598": "Papua New Guinea", "600": "Paraguay", "604": "Peru", "608": "Philippines",
     "612": "Pitcairn", "630": "Puerto Rico", "634": "Qatar", "638": "Reunion", "642": "Romania",
     "643": "Russia", "646": "Rwanda", "654": "Saint Helena", "659": "Saint Kitts and Nevis",
     "660": "Anguilla", "662": "Saint Lucia", "666": "Saint Pierre and Miquelon",
     "670": "Saint Vincent and the Grenadines", "674": "San Marino", "678": "Sao Tome and Principe",
-    "682": "Saudi Arabia", "686": "Senegal", "688": "Serbia", "690": "Seychelles", "694": "Sierra Leone",
-    "702": "Singapore", "704": "Vietnam", "706": "Somalia", "710": "South Africa", "716": "Zimbabwe",
-    "720": "Yemen", "728": "South Sudan", "729": "Sudan", "732": "Western Sahara", "740": "Suriname",
-    "748": "Eswatini", "756": "Switzerland", "760": "Syria", "762": "Tajikistan", "764": "Thailand",
-    "768": "Togo", "772": "Tokelau", "776": "Tonga", "780": "Trinidad and Tobago",
-    "784": "United Arab Emirates", "788": "Tunisia", "792": "Turkey", "795": "Turkmenistan",
-    "796": "Turks and Caicos Islands", "798": "Tuvalu", "800": "Uganda", "804": "Ukraine",
-    "807": "North Macedonia", "818": "Egypt", "826": "United Kingdom", "831": "Guernsey",
-    "832": "Jersey", "833": "Isle of Man", "834": "Tanzania", "840": "United States",
-    "842": "United States", "850": "US Virgin Islands", "854": "Burkina Faso", "858": "Uruguay",
-    "860": "Uzbekistan", "862": "Venezuela", "876": "Wallis and Futuna", "882": "Samoa",
-    "887": "Yemen", "894": "Zambia",
+    "682": "Saudi Arabia", "686": "Senegal", "688": "Serbia", "690": "Seychelles",
+    "694": "Sierra Leone", "702": "Singapore", "704": "Vietnam", "706": "Somalia",
+    "710": "South Africa", "716": "Zimbabwe", "720": "Yemen", "728": "South Sudan", "729": "Sudan",
+    "732": "Western Sahara", "740": "Suriname", "748": "Eswatini", "756": "Switzerland",
+    "760": "Syria", "762": "Tajikistan", "764": "Thailand", "768": "Togo", "772": "Tokelau",
+    "776": "Tonga", "780": "Trinidad and Tobago", "784": "United Arab Emirates", "788": "Tunisia",
+    "792": "Turkey", "795": "Turkmenistan", "796": "Turks and Caicos Islands", "798": "Tuvalu",
+    "800": "Uganda", "804": "Ukraine", "807": "North Macedonia", "818": "Egypt",
+    "826": "United Kingdom", "831": "Guernsey", "832": "Jersey", "833": "Isle of Man",
+    "834": "Tanzania", "840": "United States", "842": "United States", "850": "US Virgin Islands",
+    "854": "Burkina Faso", "858": "Uruguay", "860": "Uzbekistan", "862": "Venezuela",
+    "876": "Wallis and Futuna", "882": "Samoa", "887": "Yemen", "894": "Zambia",
     # Special codes
     "EXTRA_EU": "EU27 Extra (Calculated)",
     "all": "All Countries"
@@ -194,7 +171,7 @@ def get_comtrade_data(api_key, hs_code, single_year, reporter_code, partner_code
         "freqCode": "A",
         "format": "json"
     }
-    
+
     try:
         response = requests.get(API_URL, headers=headers, params=params, timeout=60)
         response.raise_for_status()
@@ -243,7 +220,7 @@ def calculate_extra_eu(df):
         return pd.DataFrame()
 
 def preprocess_dataframe(df, original_hs_codes):
-    """
+    """ 
     다운로드용 데이터프레임 전처리:
     - 필요한 열만 선택 및 정리
     - 국가명 영문 열 추가 (COUNTRY_NAMES 딕셔너리 활용)
@@ -288,22 +265,19 @@ def preprocess_dataframe(df, original_hs_codes):
         if code_stripped in hs_code_map:
             return hs_code_map[code_stripped]
         return code_str
-
+        
     result['cmdCode'] = result['cmdCode'].apply(format_cmdcode)
 
     # 필요한 열 선택 및 순서 정렬
     columns_to_keep = [
-        'period',
-        'reporterCode', 'reporterName',
-        'partnerCode', 'partnerName',
-        'flowCode',
-        'cmdCode',
-        'netWgt', 'primaryValue'
+        'period', 'reporterCode', 'reporterName', 'partnerCode', 'partnerName', 
+        'flowCode', 'cmdCode', 'netWgt', 'primaryValue'
     ]
+    
     # 존재하는 열만 선택
     available_cols = [col for col in columns_to_keep if col in result.columns]
     result = result[available_cols]
-
+    
     # 열 이름 변경: 단위 표시
     rename_map = {
         'netWgt': 'netWgt (kg)',
@@ -313,8 +287,19 @@ def preprocess_dataframe(df, original_hs_codes):
     
     return result
 
-def create_alluvial_diagram(df):
-    """ Plotly Sankey diagram 생성 Reporter → cmdCode → Partner (두께: netWgt) """
+def create_alluvial_diagram(df, font_size=12, reporter_color='#2E86AB', hscode_color='#A23B72', partner_color='#F18F01', link_opacity=0.3, diagram_height=600):
+    """ 
+    Plotly Sankey diagram 생성 
+    Reporter → cmdCode → Partner (두께: netWgt)
+    
+    Parameters:
+    - font_size: 폰트 크기 (기본값: 12)
+    - reporter_color: Reporter 노드 색상
+    - hscode_color: HS Code 노드 색상
+    - partner_color: Partner 노드 색상
+    - link_opacity: 링크 투명도 (0~1)
+    - diagram_height: 다이어그램 높이 (px)
+    """
     import plotly.graph_objects as go
     
     if df.empty or 'netWgt (kg)' not in df.columns:
@@ -327,7 +312,7 @@ def create_alluvial_diagram(df):
     
     if df_clean.empty:
         return None
-        
+
     # 노드 목록 생성
     reporters = df_clean['reporterName'].unique().tolist()
     cmdcodes = df_clean['cmdCode'].unique().tolist()
@@ -360,12 +345,15 @@ def create_alluvial_diagram(df):
     node_colors = []
     for node in all_nodes:
         if node in reporters:
-            node_colors.append('#2E86AB') # Reporter: 파란색
+            node_colors.append(reporter_color)
         elif node.startswith('HS-'):
-            node_colors.append('#A23B72') # HS Code: 보라색
+            node_colors.append(hscode_color)
         else:
-            node_colors.append('#F18F01') # Partner: 주황색
+            node_colors.append(partner_color)
             
+    # 링크 색상 (회색 + 투명도)
+    link_color = f'rgba(100, 100, 100, {link_opacity})'
+    
     # Sankey 다이어그램 생성
     fig = go.Figure(data=[go.Sankey(
         node=dict(
@@ -379,14 +367,14 @@ def create_alluvial_diagram(df):
             source=sources,
             target=targets,
             value=values,
-            color='rgba(100, 100, 100, 0.3)'
+            color=link_color
         )
     )])
     
     fig.update_layout(
         title_text="Alluvial Diagram: Reporter → HS Code → Partner (Weight: kg)",
-        font_size=12,
-        height=600
+        font_size=font_size,
+        height=diagram_height
     )
     
     return fig
@@ -409,18 +397,44 @@ st.markdown("보고 국가와 상대국을 직접 선택하거나, **EU 역외 �
 with st.sidebar:
     st.header("🔑 API 설정")
     api_key = st.text_input("Subscription Key", type="password")
-    st.write("---")
     
+    st.write("---")
     st.subheader("⚙️ 교역 구분 (Flow)")
     flow_options = st.multiselect(
         "수집할 항목:",
         ["수입 (Import)", "수출 (Export)"],
         default=["수입 (Import)"]
     )
+    
     flow_codes = []
     if "수입 (Import)" in flow_options: flow_codes.append("M")
     if "수출 (Export)" in flow_options: flow_codes.append("X")
     final_flow_code = ",".join(flow_codes)
+    
+    st.write("---")
+    st.subheader("🎨 다이어그램 설정")
+    
+    # 테마 프리셋
+    theme_presets = {
+        "기본 (Default)": {"reporter": "#2E86AB", "hscode": "#A23B72", "partner": "#F18F01"},
+        "다크 모드 (Dark)": {"reporter": "#00D4FF", "hscode": "#FF6B6B", "partner": "#4ECDC4"},
+        "파스텔 (Pastel)": {"reporter": "#A8E6CF", "hscode": "#DDA0DD", "partner": "#FFD93D"},
+        "비즈니스 (Business)": {"reporter": "#003366", "hscode": "#666666", "partner": "#CC6600"},
+        "네온 (Neon)": {"reporter": "#00FFFF", "hscode": "#FF00FF", "partner": "#FFFF00"},
+    }
+    
+    selected_theme = st.selectbox("테마 선택:", list(theme_presets.keys()))
+    theme_colors = theme_presets[selected_theme]
+    
+    with st.expander("세부 설정"):
+        diagram_font_size = st.slider("폰트 크기", min_value=8, max_value=20, value=12)
+        diagram_height = st.slider("다이어그램 높이 (px)", min_value=400, max_value=1000, value=600, step=50)
+        link_opacity = st.slider("링크 투명도", min_value=0.1, max_value=0.8, value=0.3, step=0.1)
+        
+        st.caption("노드 색상 (HEX)")
+        reporter_color = st.text_input("Reporter 색상", value=theme_colors["reporter"])
+        hscode_color = st.text_input("HS Code 색상", value=theme_colors["hscode"])
+        partner_color = st.text_input("Partner 색상", value=theme_colors["partner"])
 
 # 메인 UI
 col1, col2 = st.columns([1, 1])
@@ -455,7 +469,6 @@ col3, col4 = st.columns([2, 1])
 
 with col3:
     uploaded_file = st.file_uploader("HS 코드 파일 (CSV/TXT)", type=["csv", "txt"])
-
 with col4:
     selected_years = st.multiselect("연도 선택:", YEAR_OPTIONS, default=["2023"])
 
@@ -469,12 +482,12 @@ if st.button("데이터 수집 시작", type="primary"):
             hs_codes = df_input.iloc[:, 0].dropna().tolist()
         else:
             stringio = uploaded_file.getvalue().decode("utf-8")
-            hs_codes = [line.strip() for line in stringio.split('\n') if line.strip()]
-
+            hs_codes = [line.strip() for line in stringio.split('
+') if line.strip()]
+            
         # 원본 HS 코드 형식 보존 (중복 제거 전)
         original_hs_codes = [c for c in hs_codes if c]
         hs_codes = list(set(original_hs_codes))
-        
         target_years = sorted(selected_years, reverse=True)
         
         # 보고 국가 분할 (안전 요청)
@@ -485,7 +498,7 @@ if st.button("데이터 수집 시작", type="primary"):
 
         total_tasks = len(hs_codes) * len(target_years) * len(reporters_list)
         st.write(f"📊 총 작업: {total_tasks}회 요청 예정")
-
+        
         all_data = []
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -503,9 +516,9 @@ if st.button("데이터 수집 시작", type="primary"):
                     
                     progress_bar.progress(current_task / total_tasks)
                     time.sleep(1.2)
-
+        
         status_text.text("✅ 완료!")
-
+        
         if all_data:
             final_df = pd.concat(all_data, ignore_index=True)
             # 데이터 전처리 (열 정리)
@@ -532,7 +545,15 @@ if st.button("데이터 수집 시작", type="primary"):
             st.caption("두께: 물량 (kg) 기준")
             
             try:
-                fig = create_alluvial_diagram(final_df)
+                fig = create_alluvial_diagram(
+                    final_df, 
+                    font_size=diagram_font_size,
+                    reporter_color=reporter_color,
+                    hscode_color=hscode_color,
+                    partner_color=partner_color,
+                    link_opacity=link_opacity,
+                    diagram_height=diagram_height
+                )
                 if fig:
                     st.plotly_chart(fig, use_container_width=True)
                 else:
@@ -540,4 +561,4 @@ if st.button("데이터 수집 시작", type="primary"):
             except Exception as e:
                 st.error(f"다이어그램 생성 오류: {e}")
         else:
-            st.warning("데이터가 없습니다.")
+            st.warning("데이터가 없습니다.");
