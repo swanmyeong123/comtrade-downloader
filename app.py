@@ -489,9 +489,12 @@ def preprocess_dataframe(df, original_hs_codes):
     
     return result
 
-def create_alluvial_diagram(df, font_size=12, font_color='#000000',
+def create_alluvial_diagram(df, font_size=20,
                             reporter_color='#2E86AB', 
                             hscode_color='#A23B72', partner_color='#F18F01',
+                            reporter_font_color='#000000',
+                            hscode_font_color='#000000',
+                            partner_font_color='#000000',
                             link_opacity=0.3, diagram_height=600, 
                             node_thickness=20,
                             group_by_continent=False, show_title=True,
@@ -501,11 +504,13 @@ def create_alluvial_diagram(df, font_size=12, font_color='#000000',
     Reporter → cmdCode → Partner (두께: netWgt)
     
     Parameters:
-    - font_size: 폰트 크기 (기본값: 12)
-    - font_color: 폰트 색상 (HEX)
+    - font_size: 폰트 크기 (기본값: 20)
     - reporter_color: Reporter 노드 색상
     - hscode_color: HS Code 노드 색상
     - partner_color: Partner 노드 색상
+    - reporter_font_color: Reporter 폰트 색상
+    - hscode_font_color: HS Code 폰트 색상
+    - partner_font_color: Partner 폰트 색상
     - link_opacity: 링크 투명도 (0~1)
     - diagram_height: 다이어그램 높이 (px)
     - node_thickness: 노드 두께 (기본값: 20)
@@ -610,23 +615,29 @@ def create_alluvial_diagram(df, font_size=12, font_color='#000000',
         "Others": "#bcbd22"           # 올리브색
     }
     
-    # 노드 색상 설정
+    # 노드 색상 및 폰트 색상 설정
     node_colors = []
+    font_colors = []
     for node in all_nodes:
         if node in reporters:
             node_colors.append(reporter_color)
+            font_colors.append(reporter_font_color)
         elif node.startswith('HS-'):
             node_colors.append(hscode_color)
+            font_colors.append(hscode_font_color)
         elif node in continent_colors:
             node_colors.append(continent_colors[node])
+            font_colors.append(partner_font_color)
         else:
             node_colors.append(partner_color)
+            font_colors.append(partner_font_color)
     
     # 링크 색상 (회색 + 투명도)
     link_color = f'rgba(100, 100, 100, {link_opacity})'
     
     # Sankey 다이어그램 생성
     fig = go.Figure(data=[go.Sankey(
+        textfont=dict(size=font_size, color=font_colors),
         node=dict(
             pad=15,
             thickness=node_thickness,
@@ -701,8 +712,7 @@ with st.sidebar:
     theme_colors = theme_presets[selected_theme]
     
     with st.expander("세부 설정"):
-        diagram_font_size = st.slider("폰트 크기", min_value=8, max_value=20, value=12)
-        font_color = st.color_picker("폰트 색상", value="#000000")
+        diagram_font_size = st.slider("폰트 크기", min_value=15, max_value=50, value=20)
         diagram_height = st.slider("다이어그램 높이 (px)", min_value=400, max_value=1000, value=600, step=50)
         node_thickness = st.slider("노드 두께", min_value=10, max_value=100, value=20, step=5)
         link_opacity = st.slider("링크 투명도", min_value=0.1, max_value=0.8, value=0.3, step=0.1)
@@ -715,6 +725,15 @@ with st.sidebar:
             hscode_color = st.color_picker("HS Code", value=theme_colors["hscode"])
         with col_c3:
             partner_color = st.color_picker("Partner", value=theme_colors["partner"])
+        
+        st.caption("폰트 색상 (노드 레이블)")
+        col_f1, col_f2, col_f3 = st.columns(3)
+        with col_f1:
+            reporter_font_color = st.color_picker("Reporter 폰트", value="#000000")
+        with col_f2:
+            hscode_font_color = st.color_picker("HS Code 폰트", value="#000000")
+        with col_f3:
+            partner_font_color = st.color_picker("Partner 폰트", value="#000000")
     
     st.write("---")
     st.subheader("📥 다운로드 설정")
@@ -722,6 +741,12 @@ with st.sidebar:
         "다운로드 양식:",
         ["PNG", "JPG", "PPTX", "모두 (PNG + JPG + PPTX)"]
     )
+    
+    # 다운로드 준비 상태 표시
+    if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
+        st.success(f"✅ 다운로드 준비 완료 ({download_format})")
+    else:
+        st.info("💡 데이터 수집 후 다운로드 가능합니다.")
 
 
 
@@ -855,10 +880,12 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
         fig = create_alluvial_diagram(
             st.session_state['final_df'],
             font_size=diagram_font_size,
-            font_color=font_color,
             reporter_color=reporter_color,
             hscode_color=hscode_color,
             partner_color=partner_color,
+            reporter_font_color=reporter_font_color,
+            hscode_font_color=hscode_font_color,
+            partner_font_color=partner_font_color,
             link_opacity=link_opacity,
             diagram_height=diagram_height,
             node_thickness=node_thickness,
@@ -873,10 +900,12 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
             fig_download = create_alluvial_diagram(
                 st.session_state['final_df'],
                 font_size=diagram_font_size,
-                font_color=font_color,
                 reporter_color=reporter_color,
                 hscode_color=hscode_color,
                 partner_color=partner_color,
+                reporter_font_color=reporter_font_color,
+                hscode_font_color=hscode_font_color,
+                partner_font_color=partner_font_color,
                 link_opacity=link_opacity,
                 diagram_height=diagram_height,
                 node_thickness=node_thickness,
