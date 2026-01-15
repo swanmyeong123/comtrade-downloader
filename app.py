@@ -21,13 +21,14 @@ UK_CODE = "826"
 # [보고 국가(Reporter) 그룹]
 REPORTER_GROUPS = {
     "직접 입력 (Custom)": "",
-    "EU 27 전체 (All EU Members)": EU27_STR,
+
     "폴란드 (Poland)": "616",
     "독일 (Germany)": "276",
     "스페인 (Spain)": "724",
     "벨기에 (Belgium)": "056",
     "스웨덴 (Sweden)": "752",
     "한국 (Korea)": "410",
+    "EU 27 전체 (All EU Members)": EU27_STR,
     "중국 (China)": "156",
     "미국 (USA)": "842",
 }
@@ -37,6 +38,11 @@ PARTNER_GROUPS = {
     "직접 입력 (Custom)": "",
     "★ EU 27 역외 (Extra-EU) [World - EU27]": "EXTRA_EU_CALC", 
     "전 세계 합계 (World Total)": "0",
+    "아프리카 (Africa)": "002",
+    "아메리카 (Americas)": "019",
+    "아시아 (Asia)": "142",
+    "유럽 (Europe)": "150",
+    "오세아니아 (Oceania)": "009",
     "EU 27 (역내 교역)": EU27_STR,
     "CPTPP (11개국 - 영국 미포함)": CPTPP_11_STR,
     "CPTPP (12개국 - 영국 포함)": CPTPP_11_STR + "," + UK_CODE,
@@ -124,6 +130,60 @@ def calculate_extra_eu(df):
         print(f"Calculation Error: {e}")
         return pd.DataFrame()
 
+def preprocess_dataframe(df, original_hs_codes):
+    """
+    다운로드용 데이터프레임 전처리:
+    - 필요한 열만 선택 및 정리
+    - 국가명 영문 열 추가 (reporterDesc, partnerDesc 활용)
+    - cmdCode를 원본 형식 유지 (앞에 0 추가)
+    - netWgt, primaryValue 열명에 단위 표시
+    """
+    if df.empty:
+        return df
+    
+    result = df.copy()
+    
+    # cmdCode를 원본 HS 코드 형식으로 변환 (앞에 0 추가)
+    hs_code_map = {code.lstrip('0'): code for code in original_hs_codes if code}
+    hs_code_map.update({code: code for code in original_hs_codes if code})  # 원본도 매핑
+    
+    def format_cmdcode(code):
+        code_str = str(code).strip()
+        # 먼저 원본 매핑 확인
+        if code_str in hs_code_map:
+            return hs_code_map[code_str]
+        # 숫자로 변환 후 매핑 확인
+        code_stripped = code_str.lstrip('0')
+        if code_stripped in hs_code_map:
+            return hs_code_map[code_stripped]
+        return code_str
+    
+    result['cmdCode'] = result['cmdCode'].apply(format_cmdcode)
+    
+    # 필요한 열 선택 및 순서 정렬
+    columns_to_keep = [
+        'period',
+        'reporterCode', 'reporterDesc',
+        'partnerCode', 'partnerDesc',
+        'cmdCode',
+        'netWgt', 'primaryValue'
+    ]
+    
+    # 존재하는 열만 선택
+    available_cols = [col for col in columns_to_keep if col in result.columns]
+    result = result[available_cols]
+    
+    # 열 이름 변경: 국가명 열 및 단위 표시
+    rename_map = {
+        'reporterDesc': 'reporterName',
+        'partnerDesc': 'partnerName',
+        'netWgt': 'netWgt (kg)',
+        'primaryValue': 'primaryValue (USD)'
+    }
+    result = result.rename(columns=rename_map)
+    
+    return result
+
 # --- 웹페이지 UI ---
 st.set_page_config(page_title="UN Comtrade 데이터 다운로더", layout="wide")
 
@@ -204,7 +264,9 @@ if st.button("데이터 수집 시작", type="primary"):
             stringio = uploaded_file.getvalue().decode("utf-8")
             hs_codes = [line.strip() for line in stringio.split('\n') if line.strip()]
         
-        hs_codes = list(set([c for c in hs_codes if c]))
+        # 원본 HS 코드 형식 보존 (중복 제거 전)
+        original_hs_codes = [c for c in hs_codes if c]
+        hs_codes = list(set(original_hs_codes))
         target_years = sorted(selected_years, reverse=True)
         
         # 보고 국가 분할 (안전 요청)
@@ -241,12 +303,14 @@ if st.button("데이터 수집 시작", type="primary"):
         
         if all_data:
             final_df = pd.concat(all_data, ignore_index=True)
+            
+            # 데이터 전처리 (열 정리)
+            final_df = preprocess_dataframe(final_df, original_hs_codes)
+            
             st.success(f"수집 성공! 총 {len(final_df)} 건.")
             
             # 미리보기
-            cols = ['reporterDesc', 'partnerDesc', 'period', 'cmdCode', 'flowDesc', 'primaryValue']
-            show_cols = [c for c in cols if c in final_df.columns]
-            st.dataframe(final_df[show_cols].head())
+            st.dataframe(final_df.head())
             
             # 다운로드
             safe_ptn = "Custom" if ptn_choice == "직접 입력 (Custom)" else ptn_choice.split("(")[0].strip()
@@ -259,4 +323,3 @@ if st.button("데이터 수집 시작", type="primary"):
             )
         else:
             st.warning("데이터가 없습니다.")
-
