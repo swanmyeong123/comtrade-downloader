@@ -635,9 +635,9 @@ def create_alluvial_diagram(df, font_size=20,
     # 링크 색상 (회색 + 투명도)
     link_color = f'rgba(100, 100, 100, {link_opacity})'
     
-    # Sankey 다이어그램 생성
+    # Sankey 다이어그램 생성 (Plotly Sankey는 노드별 폰트 색상 미지원)
     fig = go.Figure(data=[go.Sankey(
-        textfont=dict(size=font_size, color=font_colors),
+        textfont=dict(size=font_size, color=reporter_font_color),
         node=dict(
             pad=15,
             thickness=node_thickness,
@@ -657,7 +657,7 @@ def create_alluvial_diagram(df, font_size=20,
     
     fig.update_layout(
         title_text=title_text,
-        font=dict(size=font_size, color=font_color),
+        font=dict(size=font_size),
         height=diagram_height
     )
     
@@ -726,14 +726,10 @@ with st.sidebar:
         with col_c3:
             partner_color = st.color_picker("Partner", value=theme_colors["partner"])
         
-        st.caption("폰트 색상 (노드 레이블)")
-        col_f1, col_f2, col_f3 = st.columns(3)
-        with col_f1:
-            reporter_font_color = st.color_picker("Reporter 폰트", value="#000000")
-        with col_f2:
-            hscode_font_color = st.color_picker("HS Code 폰트", value="#000000")
-        with col_f3:
-            partner_font_color = st.color_picker("Partner 폰트", value="#000000")
+        # 폰트 색상 (전체 레이블에 적용 - Plotly Sankey 제한)
+        reporter_font_color = st.color_picker("폰트 색상 (레이블)", value="#000000")
+        hscode_font_color = reporter_font_color  # 동일 색상 사용
+        partner_font_color = reporter_font_color  # 동일 색상 사용
     
     st.write("---")
     st.subheader("📥 다운로드 설정")
