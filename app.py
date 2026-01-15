@@ -18,6 +18,254 @@ EU27_STR = ",".join(EU27_LIST)
 CPTPP_11_STR = "036,096,124,152,392,458,484,554,604,702,704" # 영국 미포함
 UK_CODE = "826"
 
+# UN M49 국가 코드 → 영문 국가명 매핑
+COUNTRY_NAMES = {
+    # World / Regions
+    "0": "World",
+    "002": "Africa",
+    "009": "Oceania",
+    "019": "Americas",
+    "142": "Asia",
+    "150": "Europe",
+    # EU 27 Countries
+    "040": "Austria",
+    "056": "Belgium",
+    "100": "Bulgaria",
+    "191": "Croatia",
+    "196": "Cyprus",
+    "203": "Czechia",
+    "208": "Denmark",
+    "233": "Estonia",
+    "246": "Finland",
+    "251": "France",
+    "242": "Fiji",  # Note: This might be an error in EU27_LIST, as Fiji is not in EU
+    "276": "Germany",
+    "300": "Greece",
+    "348": "Hungary",
+    "372": "Ireland",
+    "380": "Italy",
+    "428": "Latvia",
+    "440": "Lithuania",
+    "442": "Luxembourg",
+    "470": "Malta",
+    "528": "Netherlands",
+    "616": "Poland",
+    "620": "Portugal",
+    "703": "Slovakia",
+    "705": "Slovenia",
+    "724": "Spain",
+    "752": "Sweden",
+    # Other Major Countries
+    "004": "Afghanistan",
+    "008": "Albania",
+    "012": "Algeria",
+    "020": "Andorra",
+    "024": "Angola",
+    "028": "Antigua and Barbuda",
+    "031": "Azerbaijan",
+    "032": "Argentina",
+    "036": "Australia",
+    "044": "Bahamas",
+    "048": "Bahrain",
+    "050": "Bangladesh",
+    "051": "Armenia",
+    "052": "Barbados",
+    "064": "Bhutan",
+    "068": "Bolivia",
+    "070": "Bosnia and Herzegovina",
+    "072": "Botswana",
+    "076": "Brazil",
+    "084": "Belize",
+    "090": "Solomon Islands",
+    "096": "Brunei Darussalam",
+    "104": "Myanmar",
+    "108": "Burundi",
+    "112": "Belarus",
+    "116": "Cambodia",
+    "120": "Cameroon",
+    "124": "Canada",
+    "132": "Cabo Verde",
+    "140": "Central African Republic",
+    "144": "Sri Lanka",
+    "148": "Chad",
+    "152": "Chile",
+    "156": "China",
+    "158": "Taiwan",
+    "170": "Colombia",
+    "174": "Comoros",
+    "178": "Congo",
+    "180": "DR Congo",
+    "184": "Cook Islands",
+    "188": "Costa Rica",
+    "192": "Cuba",
+    "204": "Benin",
+    "212": "Dominica",
+    "214": "Dominican Republic",
+    "218": "Ecuador",
+    "222": "El Salvador",
+    "226": "Equatorial Guinea",
+    "231": "Ethiopia",
+    "232": "Eritrea",
+    "234": "Faroe Islands",
+    "238": "Falkland Islands",
+    "242": "Fiji",
+    "250": "France",
+    "254": "French Guiana",
+    "258": "French Polynesia",
+    "262": "Djibouti",
+    "266": "Gabon",
+    "268": "Georgia",
+    "270": "Gambia",
+    "275": "Palestine",
+    "288": "Ghana",
+    "292": "Gibraltar",
+    "296": "Kiribati",
+    "304": "Greenland",
+    "308": "Grenada",
+    "312": "Guadeloupe",
+    "316": "Guam",
+    "320": "Guatemala",
+    "324": "Guinea",
+    "328": "Guyana",
+    "332": "Haiti",
+    "340": "Honduras",
+    "344": "Hong Kong",
+    "352": "Iceland",
+    "356": "India",
+    "360": "Indonesia",
+    "364": "Iran",
+    "368": "Iraq",
+    "376": "Israel",
+    "384": "Cote d'Ivoire",
+    "388": "Jamaica",
+    "392": "Japan",
+    "398": "Kazakhstan",
+    "400": "Jordan",
+    "404": "Kenya",
+    "408": "North Korea",
+    "410": "South Korea",
+    "414": "Kuwait",
+    "417": "Kyrgyzstan",
+    "418": "Laos",
+    "422": "Lebanon",
+    "426": "Lesotho",
+    "430": "Liberia",
+    "434": "Libya",
+    "438": "Liechtenstein",
+    "446": "Macao",
+    "450": "Madagascar",
+    "454": "Malawi",
+    "458": "Malaysia",
+    "462": "Maldives",
+    "466": "Mali",
+    "474": "Martinique",
+    "478": "Mauritania",
+    "480": "Mauritius",
+    "484": "Mexico",
+    "492": "Monaco",
+    "496": "Mongolia",
+    "498": "Moldova",
+    "499": "Montenegro",
+    "500": "Montserrat",
+    "504": "Morocco",
+    "508": "Mozambique",
+    "512": "Oman",
+    "516": "Namibia",
+    "520": "Nauru",
+    "524": "Nepal",
+    "530": "Netherlands Antilles",
+    "531": "Curacao",
+    "533": "Aruba",
+    "534": "Sint Maarten",
+    "540": "New Caledonia",
+    "548": "Vanuatu",
+    "554": "New Zealand",
+    "558": "Nicaragua",
+    "562": "Niger",
+    "566": "Nigeria",
+    "570": "Niue",
+    "574": "Norfolk Island",
+    "578": "Norway",
+    "580": "Northern Mariana Islands",
+    "583": "Micronesia",
+    "584": "Marshall Islands",
+    "585": "Palau",
+    "586": "Pakistan",
+    "591": "Panama",
+    "598": "Papua New Guinea",
+    "600": "Paraguay",
+    "604": "Peru",
+    "608": "Philippines",
+    "612": "Pitcairn",
+    "630": "Puerto Rico",
+    "634": "Qatar",
+    "638": "Reunion",
+    "642": "Romania",
+    "643": "Russia",
+    "646": "Rwanda",
+    "654": "Saint Helena",
+    "659": "Saint Kitts and Nevis",
+    "660": "Anguilla",
+    "662": "Saint Lucia",
+    "666": "Saint Pierre and Miquelon",
+    "670": "Saint Vincent and the Grenadines",
+    "674": "San Marino",
+    "678": "Sao Tome and Principe",
+    "682": "Saudi Arabia",
+    "686": "Senegal",
+    "688": "Serbia",
+    "690": "Seychelles",
+    "694": "Sierra Leone",
+    "702": "Singapore",
+    "704": "Vietnam",
+    "706": "Somalia",
+    "710": "South Africa",
+    "716": "Zimbabwe",
+    "720": "Yemen",
+    "728": "South Sudan",
+    "729": "Sudan",
+    "732": "Western Sahara",
+    "740": "Suriname",
+    "748": "Eswatini",
+    "756": "Switzerland",
+    "760": "Syria",
+    "762": "Tajikistan",
+    "764": "Thailand",
+    "768": "Togo",
+    "772": "Tokelau",
+    "776": "Tonga",
+    "780": "Trinidad and Tobago",
+    "784": "United Arab Emirates",
+    "788": "Tunisia",
+    "792": "Turkey",
+    "795": "Turkmenistan",
+    "796": "Turks and Caicos Islands",
+    "798": "Tuvalu",
+    "800": "Uganda",
+    "804": "Ukraine",
+    "807": "North Macedonia",
+    "818": "Egypt",
+    "826": "United Kingdom",
+    "831": "Guernsey",
+    "832": "Jersey",
+    "833": "Isle of Man",
+    "834": "Tanzania",
+    "840": "United States",
+    "842": "United States",
+    "850": "US Virgin Islands",
+    "854": "Burkina Faso",
+    "858": "Uruguay",
+    "860": "Uzbekistan",
+    "862": "Venezuela",
+    "876": "Wallis and Futuna",
+    "882": "Samoa",
+    "887": "Yemen",
+    "894": "Zambia",
+    # Special codes
+    "EXTRA_EU": "EU27 Extra (Calculated)",
+    "all": "All Countries"
+}
+
 # [보고 국가(Reporter) 그룹]
 REPORTER_GROUPS = {
     "직접 입력 (Custom)": "",
@@ -134,7 +382,7 @@ def preprocess_dataframe(df, original_hs_codes):
     """
     다운로드용 데이터프레임 전처리:
     - 필요한 열만 선택 및 정리
-    - 국가명 영문 열 추가 (reporterDesc, partnerDesc 활용)
+    - 국가명 영문 열 추가 (COUNTRY_NAMES 딕셔너리 활용)
     - cmdCode를 원본 형식 유지 (앞에 0 추가)
     - netWgt, primaryValue 열명에 단위 표시
     """
@@ -142,6 +390,26 @@ def preprocess_dataframe(df, original_hs_codes):
         return df
     
     result = df.copy()
+    
+    # 국가 코드를 영문 국가명으로 변환하는 함수
+    def get_country_name(code):
+        code_str = str(code).strip()
+        # 먼저 그대로 찾기
+        if code_str in COUNTRY_NAMES:
+            return COUNTRY_NAMES[code_str]
+        # 앞에 0을 붙여서 찾기 (3자리로)
+        padded_code = code_str.zfill(3)
+        if padded_code in COUNTRY_NAMES:
+            return COUNTRY_NAMES[padded_code]
+        # 찾지 못하면 코드 그대로 반환
+        return code_str
+    
+    # reporterCode와 partnerCode에서 영문 국가명 생성
+    if 'reporterCode' in result.columns:
+        result['reporterName'] = result['reporterCode'].apply(get_country_name)
+    
+    if 'partnerCode' in result.columns:
+        result['partnerName'] = result['partnerCode'].apply(get_country_name)
     
     # cmdCode를 원본 HS 코드 형식으로 변환 (앞에 0 추가)
     hs_code_map = {code.lstrip('0'): code for code in original_hs_codes if code}
@@ -163,8 +431,8 @@ def preprocess_dataframe(df, original_hs_codes):
     # 필요한 열 선택 및 순서 정렬
     columns_to_keep = [
         'period',
-        'reporterCode', 'reporterDesc',
-        'partnerCode', 'partnerDesc',
+        'reporterCode', 'reporterName',
+        'partnerCode', 'partnerName',
         'cmdCode',
         'netWgt', 'primaryValue'
     ]
@@ -173,10 +441,8 @@ def preprocess_dataframe(df, original_hs_codes):
     available_cols = [col for col in columns_to_keep if col in result.columns]
     result = result[available_cols]
     
-    # 열 이름 변경: 국가명 열 및 단위 표시
+    # 열 이름 변경: 단위 표시
     rename_map = {
-        'reporterDesc': 'reporterName',
-        'partnerDesc': 'partnerName',
         'netWgt': 'netWgt (kg)',
         'primaryValue': 'primaryValue (USD)'
     }
