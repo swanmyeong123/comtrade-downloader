@@ -492,7 +492,8 @@ def preprocess_dataframe(df, original_hs_codes):
 def create_alluvial_diagram(df, font_size=12, reporter_color='#2E86AB', 
                             hscode_color='#A23B72', partner_color='#F18F01',
                             link_opacity=0.3, diagram_height=600, 
-                            group_by_continent=False, show_title=True):
+                            group_by_continent=False, show_title=True,
+                            merge_eu27_reporter=False):
     """
     Plotly Sankey diagram 생성
     Reporter → cmdCode → Partner (두께: netWgt)
@@ -506,6 +507,7 @@ def create_alluvial_diagram(df, font_size=12, reporter_color='#2E86AB',
     - diagram_height: 다이어그램 높이 (px)
     - group_by_continent: True면 국가를 대륙별로 그룹화
     - show_title: True면 제목 표시 (이미지 다운로드 시 False)
+    - merge_eu27_reporter: True면 EU27 국가 Reporter를 "EU27"로 통합
     """
     import plotly.graph_objects as go
     
@@ -520,9 +522,39 @@ def create_alluvial_diagram(df, font_size=12, reporter_color='#2E86AB',
     if df_clean.empty:
         return None
     
-    # 대륙별 그룹화 적용
+    # EU27 Reporter 통합 (EU27 국가를 "EU27"로 표시)
+    if merge_eu27_reporter and 'reporterCode' in df_clean.columns:
+        df_clean['reporterName'] = df_clean['reporterCode'].apply(
+            lambda x: "EU27" if str(x).zfill(3) in EU27_LIST else df_clean.loc[df_clean['reporterCode'] == x, 'reporterName'].iloc[0] if len(df_clean.loc[df_clean['reporterCode'] == x, 'reporterName']) > 0 else str(x)
+        )
+        # 더 간단한 방식으로 재작성
+        def get_reporter_display(row):
+            code = str(row['reporterCode']).zfill(3)
+            if code in EU27_LIST:
+                return "EU27"
+            return row['reporterName']
+        df_clean['reporterName'] = df_clean.apply(get_reporter_display, axis=1)
+    
+    # 대륙별 그룹화 적용 (유럽을 Intra/Extra-EU27로 분리)
     if group_by_continent and 'partnerCode' in df_clean.columns:
-        df_clean['partnerContinent'] = df_clean['partnerCode'].apply(get_continent_name)
+        def get_continent_with_eu_split(code):
+            """유럽을 Intra-EU27과 Extra-EU27로 분리"""
+            code_str = str(code).zfill(3)
+            if code_str in EU27_LIST:
+                return "Intra-EU27"
+            elif code_str in CONTINENT_EUROPE:
+                return "Extra-EU27"
+            # 기존 대륙 분류
+            if code_str in CONTINENT_AFRICA: return "Africa"
+            if code_str in CONTINENT_MIDDLE_EAST: return "Middle East"
+            if code_str in CONTINENT_EAST_ASIA: return "East Asia"
+            if code_str in CONTINENT_SOUTHEAST_ASIA: return "Southeast Asia"
+            if code_str in CONTINENT_NORTH_AMERICA: return "North America"
+            if code_str in CONTINENT_CENTRAL_SOUTH_AMERICA: return "Central/South America"
+            if code_str in CONTINENT_OCEANIA: return "Oceania"
+            return "Others"
+        
+        df_clean['partnerContinent'] = df_clean['partnerCode'].apply(get_continent_with_eu_split)
         # 대륙별로 물량 합산
         df_grouped = df_clean.groupby(['reporterName', 'cmdCode', 'partnerContinent'])['netWgt (kg)'].sum().reset_index()
         df_grouped = df_grouped.rename(columns={'partnerContinent': 'partnerName'})
@@ -556,17 +588,19 @@ def create_alluvial_diagram(df, font_size=12, reporter_color='#2E86AB',
     targets = targets1 + targets2
     values = values1 + values2
     
-    # 대륙별 색상 매핑
+    # 대륙별 색상 매핑 (Intra/Extra-EU27 포함)
     continent_colors = {
-        "Europe": "#1f77b4",
-        "Africa": "#ff7f0e",
-        "Middle East": "#2ca02c",
-        "East Asia": "#d62728",
-        "Southeast Asia": "#9467bd",
-        "North America": "#8c564b",
-        "Central/South America": "#e377c2",
-        "Oceania": "#7f7f7f",
-        "Others": "#bcbd22"
+        "Intra-EU27": "#1f77b4",      # 파란색 (EU 역내)
+        "Extra-EU27": "#17becf",      # 청록색 (EU 역외 유럽)
+        "Europe": "#1f77b4",          # 파란색 (기본)
+        "Africa": "#ff7f0e",          # 주황색
+        "Middle East": "#2ca02c",     # 녹색
+        "East Asia": "#d62728",       # 빨간색
+        "Southeast Asia": "#9467bd",  # 보라색
+        "North America": "#8c564b",   # 갈색
+        "Central/South America": "#e377c2",  # 분홍색
+        "Oceania": "#7f7f7f",         # 회색
+        "Others": "#bcbd22"           # 올리브색
     }
     
     # 노드 색상 설정
@@ -779,6 +813,7 @@ if st.button("데이터 수집 시작", type="primary"):
             # 세션 상태에 데이터 저장 (다이어그램 설정 변경 시 재사용)
             st.session_state['final_df'] = final_df
             st.session_state['partner_mode'] = partner_code_val
+            st.session_state['reporter_code'] = reporter_code  # EU27 판단용
         else:
             st.warning("데이터가 없습니다.")
 
@@ -791,6 +826,10 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
     # 대륙별 그룹화 여부 확인
     group_by_continent = st.session_state.get('partner_mode') == 'ALL_CONTINENTS'
     
+    # EU27 Reporter 통합 여부 확인 (EU27 전체 선택 시)
+    saved_reporter = st.session_state.get('reporter_code', '')
+    merge_eu27 = (saved_reporter == EU27_STR)
+    
     try:
         fig = create_alluvial_diagram(
             st.session_state['final_df'],
@@ -801,7 +840,8 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
             link_opacity=link_opacity,
             diagram_height=diagram_height,
             group_by_continent=group_by_continent,
-            show_title=True
+            show_title=True,
+            merge_eu27_reporter=merge_eu27
         )
         if fig:
             st.plotly_chart(fig, use_container_width=True, key="main_diagram")
@@ -816,20 +856,65 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
                 link_opacity=link_opacity,
                 diagram_height=diagram_height,
                 group_by_continent=group_by_continent,
-                show_title=False
+                show_title=False,
+                merge_eu27_reporter=merge_eu27
             )
             
+            # 다운로드 버튼들 (PNG, PPT)
+            col_down1, col_down2 = st.columns(2)
+            
             # PNG로 저장
-            try:
-                img_bytes = fig_download.to_image(format="png", width=1200, height=diagram_height, scale=2)
-                st.download_button(
-                    label="📥 다이어그램 이미지 다운로드 (PNG)",
-                    data=img_bytes,
-                    file_name="alluvial_diagram.png",
-                    mime="image/png",
-                )
-            except Exception as img_error:
-                st.caption(f"이미지 다운로드를 위해 kaleido 패키지가 필요합니다.")
+            with col_down1:
+                try:
+                    img_bytes = fig_download.to_image(format="png", width=1200, height=diagram_height, scale=2)
+                    st.download_button(
+                        label="📥 이미지 다운로드 (PNG)",
+                        data=img_bytes,
+                        file_name="alluvial_diagram.png",
+                        mime="image/png",
+                    )
+                except Exception as img_error:
+                    st.caption("이미지: kaleido 패키지 필요")
+            
+            # PPT로 저장
+            with col_down2:
+                try:
+                    from pptx import Presentation
+                    from pptx.util import Inches, Pt
+                    import io
+                    
+                    # 이미지를 먼저 생성
+                    img_bytes = fig_download.to_image(format="png", width=1200, height=diagram_height, scale=2)
+                    
+                    # PPT 생성
+                    prs = Presentation()
+                    prs.slide_width = Inches(13.333)  # 16:9 기준
+                    prs.slide_height = Inches(7.5)
+                    
+                    # 슬라이드 추가
+                    blank_slide_layout = prs.slide_layouts[6]  # 빈 슬라이드
+                    slide = prs.slides.add_slide(blank_slide_layout)
+                    
+                    # 이미지를 슬라이드에 추가
+                    img_stream = io.BytesIO(img_bytes)
+                    left = Inches(0.5)
+                    top = Inches(0.5)
+                    width = Inches(12.333)
+                    slide.shapes.add_picture(img_stream, left, top, width=width)
+                    
+                    # PPT를 바이트로 저장
+                    ppt_stream = io.BytesIO()
+                    prs.save(ppt_stream)
+                    ppt_bytes = ppt_stream.getvalue()
+                    
+                    st.download_button(
+                        label="📥 PPT 다운로드",
+                        data=ppt_bytes,
+                        file_name="alluvial_diagram.pptx",
+                        mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                    )
+                except Exception as ppt_error:
+                    st.caption("PPT: python-pptx 패키지 필요")
         else:
             st.info("다이어그램을 생성할 데이터가 충분하지 않습니다. (물량 데이터 필요)")
     except Exception as e:
