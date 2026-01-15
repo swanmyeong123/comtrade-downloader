@@ -482,10 +482,9 @@ if st.button("데이터 수집 시작", type="primary"):
             hs_codes = df_input.iloc[:, 0].dropna().tolist()
         else:
             stringio = uploaded_file.getvalue().decode("utf-8")
-            hs_codes = [line.strip() for line in stringio.split('
-') if line.strip()]
-            
-        # 원본 HS 코드 형식 보존 (중복 제거 전)
+            hs_codes = [line.strip() for line in stringio.split('\n') if line.strip()]
+
+            # 원본 HS 코드 형식 보존 (중복 제거 전)
         original_hs_codes = [c for c in hs_codes if c]
         hs_codes = list(set(original_hs_codes))
         target_years = sorted(selected_years, reverse=True)
@@ -562,3 +561,4 @@ if st.button("데이터 수집 시작", type="primary"):
                 st.error(f"다이어그램 생성 오류: {e}")
         else:
             st.warning("데이터가 없습니다.");
+
