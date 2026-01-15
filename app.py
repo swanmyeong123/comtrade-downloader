@@ -702,15 +702,19 @@ with st.sidebar:
     
     with st.expander("세부 설정"):
         diagram_font_size = st.slider("폰트 크기", min_value=8, max_value=20, value=12)
-        font_color = st.text_input("폰트 색상 (HEX)", value="#000000")
+        font_color = st.color_picker("폰트 색상", value="#000000")
         diagram_height = st.slider("다이어그램 높이 (px)", min_value=400, max_value=1000, value=600, step=50)
-        node_thickness = st.slider("노드 두께", min_value=10, max_value=40, value=20, step=2)
+        node_thickness = st.slider("노드 두께", min_value=10, max_value=100, value=20, step=5)
         link_opacity = st.slider("링크 투명도", min_value=0.1, max_value=0.8, value=0.3, step=0.1)
         
-        st.caption("노드 색상 (HEX)")
-        reporter_color = st.text_input("Reporter 색상", value=theme_colors["reporter"])
-        hscode_color = st.text_input("HS Code 색상", value=theme_colors["hscode"])
-        partner_color = st.text_input("Partner 색상", value=theme_colors["partner"])
+        st.caption("노드 색상")
+        col_c1, col_c2, col_c3 = st.columns(3)
+        with col_c1:
+            reporter_color = st.color_picker("Reporter", value=theme_colors["reporter"])
+        with col_c2:
+            hscode_color = st.color_picker("HS Code", value=theme_colors["hscode"])
+        with col_c3:
+            partner_color = st.color_picker("Partner", value=theme_colors["partner"])
     
     st.write("---")
     st.subheader("📥 다운로드 설정")
