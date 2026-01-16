@@ -316,8 +316,7 @@ PARTNER_GROUPS = {
     "CPTPP (11개국 - 영국 미포함)": CPTPP_11_STR,
     "CPTPP (12개국 - 영국 포함)": CPTPP_11_STR + "," + UK_CODE,
     "미국 (USA)": "842",
-    "중국 (China)": "156",
-    "모든 개별 국가 (All Individual)": "all"
+    "중국 (China)": "156"
 }
 
 # 대륙 이름 매핑 (코드 → 대륙명)
@@ -333,6 +332,47 @@ def get_continent_name(country_code):
     if code in CONTINENT_CENTRAL_SOUTH_AMERICA: return "Central/South America"
     if code in CONTINENT_OCEANIA: return "Oceania"
     return "Others"
+
+
+# UN M49 기반 국가 목록 (지역별 그룹화)
+COUNTRIES_BY_REGION = {
+    "Africa": {
+        "Northern Africa": ["012", "818", "434", "504", "729", "788", "732"],
+        "Sub-Saharan Africa": {
+            "Eastern Africa": ["108", "086", "174", "262", "232", "231", "404", "175", "454", "480", "508", "638", "646", "690", "706", "728", "800", "834", "716", "894"],
+            "Middle Africa": ["024", "120", "140", "148", "266", "226", "178", "180", "678"],
+            "Southern Africa": ["072", "748", "426", "516", "710"],
+            "Western Africa": ["204", "132", "270", "288", "324", "624", "430", "466", "478", "562", "566", "654", "686", "694", "768", "854"]
+        }
+    },
+    "Americas": {
+        "Northern America": ["060", "124", "304", "666", "840"],  
+        "Latin America and the Caribbean": {
+            "Caribbean": ["660", "028", "533", "044", "052", "535", "136", "192", "531", "212", "214", "308", "312", "332", "388", "474", "500", "630", "652", "659", "662", "663", "670", "780", "796", "092", "850", "534"],
+            "Central America": ["084", "188", "222", "320", "340", "484", "558", "591"],
+            "South America": ["032", "068", "074", "076", "170", "218", "238", "254", "328", "600", "604", "239", "740", "858", "862"]
+        }
+    },
+    "Asia": {
+        "Central Asia": ["398", "417", "762", "795", "860"],
+        "Eastern Asia": ["156", "344", "392", "408", "410", "446", "496", "158"],
+        "Southern Asia": ["004", "050", "064", "356", "364", "462", "524", "586", "144"],
+        "South-eastern Asia": ["096", "104", "116", "360", "418", "458", "608", "702", "764", "626", "704"],
+        "Western Asia": ["051", "031", "048", "196", "268", "368", "376", "400", "414", "422", "275", "512", "634", "682", "760", "784", "792", "887"]
+    },
+    "Europe": {
+        "Eastern Europe": ["112", "100", "203", "348", "616", "498", "642", "643", "703", "804", "807"],
+        "Northern Europe": ["248", "208", "233", "234", "372", "352", "428", "440", "578", "744", "752", "826", "831", "832", "833"],
+        "Southern Europe": ["008", "020", "070", "191", "292", "300", "336", "380", "470", "499", "620", "674", "688", "705", "724"],
+        "Western Europe": ["040", "056", "250", "276", "438", "442", "492", "528", "756"]
+    },
+    "Oceania": {
+        "Australia and New Zealand": ["036", "162", "166", "334", "554", "574"],
+        "Melanesia": ["242", "540", "598", "090", "548"],
+        "Micronesia": ["316", "296", "584", "583", "520", "580", "585"],
+        "Polynesia": ["016", "184", "258", "570", "612", "772", "776", "798", "882", "876"]
+    }
+}
 
 
 API_URL = "https://comtradeapi.un.org/data/v1/get/C/A/HS"
@@ -717,6 +757,101 @@ def create_alluvial_diagram(df, font_size=20,
     return fig
 
 
+def render_country_selection_ui(selection_type="Reporter"):
+    """
+    UN M49 지역별 체크박스 UI 렌더링
+    
+    Args:
+        selection_type: "Reporter" 또는 "Partner"
+    
+    Returns:
+        selected_codes: 선택된 국가 코드 리스트
+    """
+    selected_codes = []
+    
+    st.write(f"**{selection_type} 국가 선택** (지역별로 선택)")
+    
+    # 각 지역별로 expander 생성
+    for region_name, sub_regions in COUNTRIES_BY_REGION.items():
+        with st.expander(f"🌍 {region_name}"):
+            # 지역 전체 선택 체크박스
+            region_select_all = st.checkbox(
+                f"✓ {region_name} 전체 선택", 
+                key=f"{selection_type}_{region_name}_all"
+            )
+            
+            # 하위 지역 처리
+            def process_sub_region(sub_region_name, countries, parent_key=""):
+                """재귀적으로 하위 지역 처리"""
+                codes = []
+                
+                if isinstance(countries, list):
+                    # 리스트인 경우: 국가 코드 목록
+                    for code in countries:
+                        country_name = COUNTRY_NAMES.get(code, f"Unknown ({code})")
+                        if region_select_all or st.checkbox(
+                            f"□ {country_name} ({code})",
+                            key=f"{selection_type}_{parent_key}_{sub_region_name}_{code}"
+                        ):
+                            codes.append(code)
+                elif isinstance(countries, dict):
+                    # 딕셔너리인 경우: 하위 지역이 더 있음
+                    sub_region_all = st.checkbox(
+                        f"▶ {sub_region_name} 전체 선택",
+                        key=f"{selection_type}_{parent_key}_{sub_region_name}_all",
+                        value=region_select_all
+                    ) or region_select_all
+                    
+                    st.markdown(f"**{sub_region_name}:**")
+                    for nested_sub_name, nested_countries in countries.items():
+                        nested_codes = process_sub_region(
+                            nested_sub_name, 
+                            nested_countries, 
+                            parent_key=f"{parent_key}_{sub_region_name}"
+                        )
+                        if sub_region_all:
+                            # 하위 지역 전체 선택 시 모든 코드 추가
+                            if isinstance(nested_countries, list):
+                                codes.extend(nested_countries)
+                            else:
+                                codes.extend(nested_codes)
+                        else:
+                            codes.extend(nested_codes)
+                
+                return codes
+            
+            # 각 하위 지역 처리
+            for sub_region_name, countries in sub_regions.items():
+                region_codes = process_sub_region(sub_region_name, countries, parent_key=region_name)
+                if region_select_all:
+                    # 전체 선택 시 모든 하위 국가 코드 추가
+                    def get_all_codes(data):
+                        codes = []
+                        if isinstance(data, list):
+                            codes.extend(data)
+                        elif isinstance(data, dict):
+                            for value in data.values():
+                                codes.extend(get_all_codes(value))
+                        return codes
+                    selected_codes.extend(get_all_codes(countries))
+                else:
+                    selected_codes.extend(region_codes)
+    
+    # 중복 제거
+    selected_codes = list(set(selected_codes))
+    
+    # 선택된 국가 표시
+    if selected_codes:
+        st.success(f"✓ {len(selected_codes)}개 국가 선택됨")
+        with st.expander("선택된 국가 목록 보기"):
+            selected_names = [f"{COUNTRY_NAMES.get(c, f'Unknown ({c})')} ({c})" for c in sorted(selected_codes)]
+            st.write(", ".join(selected_names))
+    else:
+        st.warning("⚠️ 국가를 선택해주세요")
+    
+    return selected_codes
+
+
 # --- 웹페이지 UI ---
 st.set_page_config(page_title="UN Comtrade 데이터 다운로더", layout="wide")
 
@@ -803,29 +938,51 @@ col1, col2 = st.columns([1, 1])
 
 with col1:
     st.subheader("1. 보고 국가 (Reporter)")
-    rep_choice = st.selectbox("보고 국가 선택:", list(REPORTER_GROUPS.keys()))
     
-    if rep_choice == "직접 입력 (Custom)":
-        reporter_code = st.text_input("보고국 코드 입력 (예: 251)", "251")
+    # 기존 그룹 옵션 (빠른 선택용)
+    st.write("**빠른 선택 옵션:**")
+    reporter_quick_select = st.selectbox(
+        "그룹 선택 (선택사항)",
+        ["선택 안함"] + [k for k in REPORTER_GROUPS.keys() if k != "직접 입력 (Custom)"],
+        key="reporter_quick_select"
+    )
+    
+    if reporter_quick_select != "선택 안함":
+        reporter_code = REPORTER_GROUPS[reporter_quick_select]
+        display_code = (reporter_code[:30] + '...') if len(reporter_code) > 30 else reporter_code
+        st.caption(f"Code: {display_code}")
     else:
-        reporter_code = REPORTER_GROUPS[rep_choice]
-        st.info(f"Code: {reporter_code}")
+        # 체크박스 UI로 개별 국가 선택
+        st.write("---")
+        selected_reporters = render_country_selection_ui("Reporter")
+        # 선택된 국가 코드를 쉼표로 구분된 문자열로 변환
+        reporter_code = ",".join(selected_reporters) if selected_reporters else ""
 
 with col2:
     st.subheader("2. 상대국 (Partner)")
-    ptn_choice = st.selectbox("상대국 선택:", list(PARTNER_GROUPS.keys()))
     
-    # 직접 입력 로직
-    if ptn_choice == "직접 입력 (Custom)":
-        partner_code_val = st.text_input("상대국 코드 입력 (예: 842 또는 842,156)", "0")
+    # 기존 그룹 옵션 (빠른 선택용)
+    st.write("**빠른 선택 옵션:**")
+    quick_select = st.selectbox(
+        "그룹 선택 (선택사항)",
+        ["선택 안함"] + [k for k in PARTNER_GROUPS.keys() if k not in ["직접 입력 (Custom)", "--- 대륙별 선택 ---", "--- 기존 선택 ---"]],
+        key="partner_quick_select"
+    )
+    
+    if quick_select != "선택 안함" and quick_select != "--- 대륙별 선택 ---" and quick_select != "--- 기존 선택 ---":
+        partner_code_val = PARTNER_GROUPS[quick_select]
+        if quick_select.startswith("★"):
+            st.success("💡 [자동 계산] World - EU27 = EU 역외 실적 산출")
+        else:
+            display_code = (partner_code_val[:30] + '...') if len(partner_code_val) > 30 else partner_code_val
+            st.caption(f"Code: {display_code}")
     else:
-        partner_code_val = PARTNER_GROUPS[ptn_choice]
-    
-    if ptn_choice.startswith("★"):
-        st.success("💡 [자동 계산] World - EU27 = EU 역외 실적 산출")
-    elif ptn_choice != "직접 입력 (Custom)":
-         display_code = (partner_code_val[:30] + '...') if len(partner_code_val) > 30 else partner_code_val
-         st.caption(f"Code: {display_code}")
+        # 체크박스 UI로 개별 국가 선택
+        st.write("---")
+        selected_partners = render_country_selection_ui("Partner")
+        # 선택된 국가 코드를 쉼표로 구분된 문자열로 변환
+        partner_code_val = ",".join(selected_partners) if selected_partners else ""
+
 
 st.subheader("3. 연도 및 품목")
 col3, col4 = st.columns([2, 1])
@@ -835,8 +992,12 @@ with col4:
     selected_years = st.multiselect("연도 선택:", YEAR_OPTIONS, default=["2023"])
 
 if st.button("데이터 수집 시작", type="primary"):
-    if not api_key or not uploaded_file or not reporter_code or not final_flow_code:
+    if not api_key or not uploaded_file or not final_flow_code:
         st.warning("설정 정보를 모두 입력해주세요.")
+    elif not reporter_code:
+        st.error("⚠️ Reporter 국가를 최소 1개 이상 선택해주세요.")
+    elif not partner_code_val:
+        st.error("⚠️ Partner 국가를 선택하거나 빠른 선택 옵션을 사용해주세요.")
     else:
         # 파일 읽기
         if uploaded_file.name.endswith('.csv'):
