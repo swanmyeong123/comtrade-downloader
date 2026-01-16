@@ -501,7 +501,8 @@ def create_alluvial_diagram(df, font_size=20,
                             custom_title="",
                             merge_eu27_reporter=False,
                             show_hscode_percentage=False,
-                            show_partner_percentage=False):
+                            show_partner_percentage=False,
+                            top_n_partners=None):
     """
     Plotly Sankey diagram 생성
     Reporter → cmdCode → Partner (두께: netWgt)
@@ -522,6 +523,7 @@ def create_alluvial_diagram(df, font_size=20,
     - merge_eu27_reporter: True면 EU27 국가 Reporter를 "EU27"로 통합
     - show_hscode_percentage: True면 HS Code에 비율 표시
     - show_partner_percentage: True면 Partner에 비율 표시
+    - top_n_partners: 상위 N개국만 표시, 나머지는 "기타"로 그룹화 (None이면 전체 표시)
     """
     import plotly.graph_objects as go
     
@@ -581,6 +583,23 @@ def create_alluvial_diagram(df, font_size=20,
     # Partner를 물량 기준 내림차순 정렬
     partner_volumes = df_clean.groupby('partnerName')['netWgt (kg)'].sum().sort_values(ascending=False)
     partners = partner_volumes.index.tolist()
+    
+    # 상위 N개국만 표시, 나머지는 "기타"로 그룹화
+    if top_n_partners is not None and len(partners) > top_n_partners:
+        top_partners = partners[:top_n_partners]
+        other_partners = partners[top_n_partners:]
+        
+        # 데이터프레임에서 "기타" 그룹으로 변환
+        df_clean = df_clean.copy()
+        df_clean['partnerName'] = df_clean['partnerName'].apply(
+            lambda x: x if x in top_partners else '기타'
+        )
+        # "기타"를 합산하여 재계산
+        df_clean = df_clean.groupby(['reporterName', 'cmdCode', 'partnerName'])['netWgt (kg)'].sum().reset_index()
+        
+        # Partner 다시 정렬
+        partner_volumes = df_clean.groupby('partnerName')['netWgt (kg)'].sum().sort_values(ascending=False)
+        partners = partner_volumes.index.tolist()
     
     # 전체 물량 계산 (비율 계산용)
     total_volume = df_clean['netWgt (kg)'].sum()
@@ -905,6 +924,10 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
     saved_reporter = st.session_state.get('reporter_code', '')
     merge_eu27 = (saved_reporter == EU27_STR)
     
+    # 모든 개별 국가 선택 시 상위 10개국만 표시
+    is_all_individual = st.session_state.get('partner_mode') == 'all'
+    top_n = 10 if is_all_individual else None
+    
     try:
         fig = create_alluvial_diagram(
             st.session_state['final_df'],
@@ -922,7 +945,8 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
             custom_title=custom_title,
             merge_eu27_reporter=merge_eu27,
             show_hscode_percentage=show_hscode_percentage,
-            show_partner_percentage=show_partner_percentage
+            show_partner_percentage=show_partner_percentage,
+            top_n_partners=top_n
         )
         if fig:
             st.plotly_chart(fig, use_container_width=True, key="main_diagram")
@@ -944,7 +968,8 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
                 custom_title="",  # 다운로드용은 제목 없음
                 merge_eu27_reporter=merge_eu27,
                 show_hscode_percentage=show_hscode_percentage,
-                show_partner_percentage=show_partner_percentage
+                show_partner_percentage=show_partner_percentage,
+                top_n_partners=top_n
             )
             
             # 다운로드 버튼들 (PNG, JPG, PPTX)
