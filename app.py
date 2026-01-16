@@ -1056,7 +1056,7 @@ if st.button("데이터 수집 시작", type="primary"):
             st.dataframe(final_df.head())
             
             # 다운로드
-            safe_ptn = "Custom" if ptn_choice == "직접 입력 (Custom)" else ptn_choice.split("(")[0].strip()
+            safe_ptn = "Custom" if quick_select == "선택 안함" else quick_select.split("(")[0].strip()
             csv = final_df.to_csv(index=False).encode('utf-8-sig')
             st.download_button(
                 label="📥 결과 다운로드 (CSV)",
