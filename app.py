@@ -346,7 +346,7 @@ COUNTRIES_BY_REGION = {
         }
     },
     "Americas": {
-        "Northern America": ["060", "124", "304", "666", "840"],  
+        "Northern America": ["060", "124", "304", "666", "842"],  
         "Latin America and the Caribbean": {
             "Caribbean": ["660", "028", "533", "044", "052", "535", "136", "192", "531", "212", "214", "308", "312", "332", "388", "474", "500", "630", "652", "659", "662", "663", "670", "780", "796", "092", "850", "534"],
             "Central America": ["084", "188", "222", "320", "340", "484", "558", "591"],
@@ -757,99 +757,39 @@ def create_alluvial_diagram(df, font_size=20,
     return fig
 
 
-def render_country_selection_ui(selection_type="Reporter"):
+def get_all_countries_list():
     """
-    UN M49 지역별 체크박스 UI 렌더링
-    
-    Args:
-        selection_type: "Reporter" 또는 "Partner"
+    COUNTRIES_BY_REGION에서 모든 국가를 평면 리스트로 추출
     
     Returns:
-        selected_codes: 선택된 국가 코드 리스트
+        country_options: [(display_name, code), ...] 형식의 리스트
     """
-    selected_codes = []
+    country_options = []
     
-    st.write(f"**{selection_type} 국가 선택** (지역별로 선택)")
+    def extract_countries(data, region_name=""):
+        """재귀적으로 국가 코드 추출"""
+        if isinstance(data, list):
+            # 리스트인 경우: 국가 코드 목록
+            for code in data:
+                country_name = COUNTRY_NAMES.get(code, f"Unknown ({code})")
+                display_name = f"{country_name} ({code})"
+                if region_name:
+                    display_name = f"[{region_name}] {display_name}"
+                country_options.append((display_name, code))
+        elif isinstance(data, dict):
+            # 딕셔너리인 경우: 하위 지역 재귀 처리
+            for key, value in data.items():
+                extract_countries(value, key)
     
-    # 각 지역별로 expander 생성
+    # 모든 지역 처리
     for region_name, sub_regions in COUNTRIES_BY_REGION.items():
-        with st.expander(f"🌍 {region_name}"):
-            # 지역 전체 선택 체크박스
-            region_select_all = st.checkbox(
-                f"✓ {region_name} 전체 선택", 
-                key=f"{selection_type}_{region_name}_all"
-            )
-            
-            # 하위 지역 처리
-            def process_sub_region(sub_region_name, countries, parent_key=""):
-                """재귀적으로 하위 지역 처리"""
-                codes = []
-                
-                if isinstance(countries, list):
-                    # 리스트인 경우: 국가 코드 목록
-                    for code in countries:
-                        country_name = COUNTRY_NAMES.get(code, f"Unknown ({code})")
-                        if region_select_all or st.checkbox(
-                            f"□ {country_name} ({code})",
-                            key=f"{selection_type}_{parent_key}_{sub_region_name}_{code}"
-                        ):
-                            codes.append(code)
-                elif isinstance(countries, dict):
-                    # 딕셔너리인 경우: 하위 지역이 더 있음
-                    sub_region_all = st.checkbox(
-                        f"▶ {sub_region_name} 전체 선택",
-                        key=f"{selection_type}_{parent_key}_{sub_region_name}_all",
-                        value=region_select_all
-                    ) or region_select_all
-                    
-                    st.markdown(f"**{sub_region_name}:**")
-                    for nested_sub_name, nested_countries in countries.items():
-                        nested_codes = process_sub_region(
-                            nested_sub_name, 
-                            nested_countries, 
-                            parent_key=f"{parent_key}_{sub_region_name}"
-                        )
-                        if sub_region_all:
-                            # 하위 지역 전체 선택 시 모든 코드 추가
-                            if isinstance(nested_countries, list):
-                                codes.extend(nested_countries)
-                            else:
-                                codes.extend(nested_codes)
-                        else:
-                            codes.extend(nested_codes)
-                
-                return codes
-            
-            # 각 하위 지역 처리
-            for sub_region_name, countries in sub_regions.items():
-                region_codes = process_sub_region(sub_region_name, countries, parent_key=region_name)
-                if region_select_all:
-                    # 전체 선택 시 모든 하위 국가 코드 추가
-                    def get_all_codes(data):
-                        codes = []
-                        if isinstance(data, list):
-                            codes.extend(data)
-                        elif isinstance(data, dict):
-                            for value in data.values():
-                                codes.extend(get_all_codes(value))
-                        return codes
-                    selected_codes.extend(get_all_codes(countries))
-                else:
-                    selected_codes.extend(region_codes)
+        extract_countries(sub_regions, region_name)
     
-    # 중복 제거
-    selected_codes = list(set(selected_codes))
+    # 중복 제거 및 정렬 (국가명 기준)
+    country_options = list(set(country_options))
+    country_options.sort(key=lambda x: x[0])
     
-    # 선택된 국가 표시
-    if selected_codes:
-        st.success(f"✓ {len(selected_codes)}개 국가 선택됨")
-        with st.expander("선택된 국가 목록 보기"):
-            selected_names = [f"{COUNTRY_NAMES.get(c, f'Unknown ({c})')} ({c})" for c in sorted(selected_codes)]
-            st.write(", ".join(selected_names))
-    else:
-        st.warning("⚠️ 국가를 선택해주세요")
-    
-    return selected_codes
+    return country_options
 
 
 # --- 웹페이지 UI ---
@@ -936,6 +876,9 @@ with st.sidebar:
 # 메인 UI
 col1, col2 = st.columns([1, 1])
 
+# 전체 국가 리스트 한 번만 가져오기
+all_countries = get_all_countries_list()
+
 with col1:
     st.subheader("1. 보고 국가 (Reporter)")
     
@@ -952,11 +895,26 @@ with col1:
         display_code = (reporter_code[:30] + '...') if len(reporter_code) > 30 else reporter_code
         st.caption(f"Code: {display_code}")
     else:
-        # 체크박스 UI로 개별 국가 선택
+        # st.multiselect로 개별 국가 선택
         st.write("---")
-        selected_reporters = render_country_selection_ui("Reporter")
-        # 선택된 국가 코드를 쉼표로 구분된 문자열로 변환
-        reporter_code = ",".join(selected_reporters) if selected_reporters else ""
+        st.write("**개별 국가 선택 (검색 가능):**")
+        selected_reporters = st.multiselect(
+            "국가를 선택하세요",
+            options=[display for display, code in all_countries],
+            default=[],
+            key="reporter_multiselect",
+            help="국가명이나 코드로 검색할 수 있습니다"
+        )
+        
+        # 선택된 국가의 코드만 추출
+        selected_reporter_codes = [
+            code for display, code in all_countries 
+            if display in selected_reporters
+        ]
+        reporter_code = ",".join(selected_reporter_codes) if selected_reporter_codes else ""
+        
+        if selected_reporter_codes:
+            st.success(f"✓ {len(selected_reporter_codes)}개 국가 선택됨")
 
 with col2:
     st.subheader("2. 상대국 (Partner)")
@@ -977,11 +935,26 @@ with col2:
             display_code = (partner_code_val[:30] + '...') if len(partner_code_val) > 30 else partner_code_val
             st.caption(f"Code: {display_code}")
     else:
-        # 체크박스 UI로 개별 국가 선택
+        # st.multiselect로 개별 국가 선택
         st.write("---")
-        selected_partners = render_country_selection_ui("Partner")
-        # 선택된 국가 코드를 쉼표로 구분된 문자열로 변환
-        partner_code_val = ",".join(selected_partners) if selected_partners else ""
+        st.write("**개별 국가 선택 (검색 가능):**")
+        selected_partners = st.multiselect(
+            "국가를 선택하세요",
+            options=[display for display, code in all_countries],
+            default=[],
+            key="partner_multiselect",
+            help="국가명이나 코드로 검색할 수 있습니다"
+        )
+        
+        # 선택된 국가의 코드만 추출
+        selected_partner_codes = [
+            code for display, code in all_countries 
+            if display in selected_partners
+        ]
+        partner_code_val = ",".join(selected_partner_codes) if selected_partner_codes else ""
+        
+        if selected_partner_codes:
+            st.success(f"✓ {len(selected_partner_codes)}개 국가 선택됨")
 
 
 st.subheader("3. 연도 및 품목")
