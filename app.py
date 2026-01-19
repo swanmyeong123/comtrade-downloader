@@ -400,6 +400,87 @@ COUNTRY_NAMES = {
     "090": "솔로몬제도", "548": "바누아투"
 }
 
+# 국가 코드 → 영문명 매핑
+COUNTRY_NAMES_ENG = {
+    # 동아시아
+    "156": "China", "344": "Hong Kong", "392": "Japan", "408": "North Korea", "410": "South Korea",
+    "446": "Macao", "496": "Mongolia", "158": "Taiwan",
+    # 동남아시아
+    "096": "Brunei", "104": "Myanmar", "116": "Cambodia", "360": "Indonesia",
+    "418": "Laos", "458": "Malaysia", "608": "Philippines", "702": "Singapore",
+    "764": "Thailand", "626": "Timor-Leste", "704": "Vietnam",
+    # 남아시아
+    "004": "Afghanistan", "050": "Bangladesh", "064": "Bhutan", "356": "India",
+    "462": "Maldives", "524": "Nepal", "586": "Pakistan", "144": "Sri Lanka",
+    # 중앙아시아
+    "398": "Kazakhstan", "417": "Kyrgyzstan", "762": "Tajikistan",
+    "795": "Turkmenistan", "860": "Uzbekistan",
+    # 서아시아 (중동)
+    "051": "Armenia", "031": "Azerbaijan", "048": "Bahrain", "196": "Cyprus",
+    "268": "Georgia", "368": "Iraq", "376": "Israel", "400": "Jordan",
+    "414": "Kuwait", "422": "Lebanon", "275": "Palestine", "512": "Oman",
+    "634": "Qatar", "682": "Saudi Arabia", "760": "Syria", "792": "Turkey",
+    "784": "UAE", "887": "Yemen",
+    # 유럽 - 서유럽
+    "040": "Austria", "056": "Belgium", "250": "France", "276": "Germany",
+    "438": "Liechtenstein", "442": "Luxembourg", "492": "Monaco", "528": "Netherlands",
+    "756": "Switzerland",
+    # 유럽 - 북유럽
+    "208": "Denmark", "233": "Estonia", "246": "Finland", "352": "Iceland",
+    "372": "Ireland", "428": "Latvia", "440": "Lithuania", "578": "Norway",
+    "752": "Sweden", "826": "United Kingdom",
+    # 유럽 - 남유럽
+    "008": "Albania", "020": "Andorra", "070": "Bosnia Herzegovina", "191": "Croatia",
+    "292": "Gibraltar", "300": "Greece", "336": "Vatican", "380": "Italy",
+    "470": "Malta", "499": "Montenegro", "620": "Portugal", "674": "San Marino",
+    "688": "Serbia", "705": "Slovenia", "724": "Spain", "807": "North Macedonia",
+    # 유럽 - 동유럽
+    "112": "Belarus", "100": "Bulgaria", "203": "Czechia", "348": "Hungary",
+    "616": "Poland", "498": "Moldova", "642": "Romania", "643": "Russia",
+    "703": "Slovakia", "804": "Ukraine",
+    # 북미
+    "060": "Bermuda", "124": "Canada", "304": "Greenland", "666": "St Pierre Miquelon",
+    "842": "United States",
+    # 중남미 - 중미
+    "084": "Belize", "188": "Costa Rica", "222": "El Salvador", "320": "Guatemala",
+    "340": "Honduras", "484": "Mexico", "558": "Nicaragua", "591": "Panama",
+    # 중남미 - 카리브해
+    "028": "Antigua Barbuda", "044": "Bahamas", "052": "Barbados", "192": "Cuba",
+    "212": "Dominica", "214": "Dominican Rep", "308": "Grenada", "332": "Haiti",
+    "388": "Jamaica", "659": "St Kitts Nevis", "662": "St Lucia",
+    "670": "St Vincent Grenadines", "780": "Trinidad Tobago",
+    # 중남미 - 남미
+    "032": "Argentina", "068": "Bolivia", "076": "Brazil", "152": "Chile",
+    "170": "Colombia", "218": "Ecuador", "328": "Guyana", "600": "Paraguay",
+    "604": "Peru", "740": "Suriname", "858": "Uruguay", "862": "Venezuela",
+    # 아프리카 - 북아프리카
+    "012": "Algeria", "818": "Egypt", "434": "Libya", "504": "Morocco",
+    "729": "Sudan", "788": "Tunisia", "732": "Western Sahara",
+    # 아프리카 - 동아프리카
+    "108": "Burundi", "086": "British Indian Ocean", "174": "Comoros", "262": "Djibouti",
+    "232": "Eritrea", "231": "Ethiopia", "404": "Kenya", "480": "Mauritius",
+    "175": "Mayotte", "454": "Malawi", "508": "Mozambique", "638": "Reunion",
+    "646": "Rwanda", "690": "Seychelles", "706": "Somalia", "728": "South Sudan",
+    "800": "Uganda", "834": "Tanzania", "894": "Zambia", "716": "Zimbabwe",
+    # 아프리카 - 중앙아프리카
+    "024": "Angola", "120": "Cameroon", "140": "Central African Rep", "148": "Chad",
+    "178": "Congo", "180": "DR Congo", "226": "Equatorial Guinea", "266": "Gabon",
+    "678": "Sao Tome Principe",
+    # 아프리카 - 남아프리카
+    "072": "Botswana", "426": "Lesotho", "516": "Namibia", "710": "South Africa",
+    "748": "Eswatini",
+    # 아프리카 - 서아프리카
+    "204": "Benin", "132": "Cabo Verde", "270": "Gambia", "288": "Ghana",
+    "324": "Guinea", "624": "Guinea-Bissau", "384": "Cote d'Ivoire", "430": "Liberia",
+    "466": "Mali", "478": "Mauritania", "562": "Niger", "566": "Nigeria",
+    "654": "St Helena", "686": "Senegal", "694": "Sierra Leone", "768": "Togo",
+    "854": "Burkina Faso",
+    # 오세아니아
+    "036": "Australia", "162": "Christmas Island", "166": "Cocos Islands", "554": "New Zealand",
+    "242": "Fiji", "540": "New Caledonia", "598": "Papua New Guinea",
+    "090": "Solomon Islands", "548": "Vanuatu"
+}
+
 # 대륙 이름 매핑 (코드 → 대륙명)
 def get_continent_name(country_code):
     """국가 코드로부터 대륙명 반환"""
@@ -550,18 +631,65 @@ def preprocess_dataframe(df, original_hs_codes):
     
     result = df.copy()
     
-    # 국가 코드를 영문 국가명으로 변환하는 함수 (코드 그대로 반환)
-    def get_country_name(code):
+    # 국가 코드를 영문 국가명으로 변환하는 함수
+    def get_country_name_eng(code):
         code_str = str(code).strip()
-        # 코드를 그대로 반환 (영문명 대신 코드 사용)
-        return code_str
+        # 먼저 그대로 찾기
+        if code_str in COUNTRY_NAMES_ENG:
+            return COUNTRY_NAMES_ENG[code_str]
+        # 앞에 0을 붙여서 찾기 (3자리로)
+        padded_code = code_str.zfill(3)
+        if padded_code in COUNTRY_NAMES_ENG:
+            return COUNTRY_NAMES_ENG[padded_code]
+        # 찾지 못하면 빈 문자열 반환
+        return ""
     
-    # reporterCode와 partnerCode에서 영문 국가명 생성
+    # 국가 코드를 한글 국가명으로 변환하는 함수
+    def get_country_name_kor(code):
+        code_str = str(code).strip()
+        # 먼저 그대로 찾기
+        if code_str in COUNTRY_NAMES:
+            return COUNTRY_NAMES[code_str]
+        # 앞에 0을 붙여서 찾기 (3자리로)
+        padded_code = code_str.zfill(3)
+        if padded_code in COUNTRY_NAMES:
+            return COUNTRY_NAMES[padded_code]
+        # 찾지 못하면 빈 문자열 반환
+        return ""
+    
+    # 대륙명 영문 변환
+    def get_continent_eng(code):
+        code_str = str(code).zfill(3)
+        return get_continent_name(code_str)
+    
+    # 대륙명 한글 변환
+    def get_continent_kor(continent_eng):
+        continent_map = {
+            "Europe": "유럽",
+            "Africa": "아프리카",
+            "Middle East": "중동",
+            "East Asia": "동아시아",
+            "Southeast Asia": "동남아시아",
+            "North America": "북미",
+            "Central/South America": "중남미",
+            "Oceania": "오세아니아",
+            "Others": "기타"
+        }
+        return continent_map.get(continent_eng, "")
+    
+    # reporterCode에서 영문/한글/대륙명 생성
     if 'reporterCode' in result.columns:
-        result['reporterName'] = result['reporterCode'].apply(get_country_name)
+        result['reporterName'] = result['reporterCode'].apply(get_country_name_eng)
+        result['reporterNameKor'] = result['reporterCode'].apply(get_country_name_kor)
+        result['reporterContinent'] = result['reporterCode'].apply(get_continent_eng)
+        result['reporterContinentKor'] = result['reporterContinent'].apply(get_continent_kor)
     
+    # partnerCode에서 영문/한글/대륙명 생성
     if 'partnerCode' in result.columns:
-        result['partnerName'] = result['partnerCode'].apply(get_country_name)
+        result['partnerName'] = result['partnerCode'].apply(get_country_name_eng)
+        result['partnerNameKor'] = result['partnerCode'].apply(get_country_name_kor)
+        result['partnerContinent'] = result['partnerCode'].apply(get_continent_eng)
+        result['partnerContinentKor'] = result['partnerContinent'].apply(get_continent_kor)
     
     # cmdCode를 원본 HS 코드 형식으로 변환 (앞에 0 추가)
     hs_code_map = {code.lstrip('0'): code for code in original_hs_codes if code}
@@ -583,8 +711,8 @@ def preprocess_dataframe(df, original_hs_codes):
     # 필요한 열 선택 및 순서 정렬
     columns_to_keep = [
         'period',
-        'reporterCode', 'reporterName',
-        'partnerCode', 'partnerName',
+        'reporterCode', 'reporterName', 'reporterNameKor', 'reporterContinent', 'reporterContinentKor',
+        'partnerCode', 'partnerName', 'partnerNameKor', 'partnerContinent', 'partnerContinentKor',
         'flowCode',
         'cmdCode',
         'netWgt', 'primaryValue'
@@ -1115,6 +1243,17 @@ with col3:
 with col4:
     selected_years = st.multiselect("연도 선택:", YEAR_OPTIONS, default=["2023"])
 
+# 다운로드 형식 선택 (데이터 수집 전)
+st.write("---")
+st.subheader("4. 다운로드 형식 선택")
+download_format = st.radio(
+    "파일 형식:",
+    ["CSV (쉼표 구분)", "TSV (탭 구분)"],
+    horizontal=True,
+    key="download_format"
+)
+
+st.write("---")
 if st.button("데이터 수집 시작", type="primary"):
     if not api_key or not uploaded_file or not final_flow_code:
         st.warning("설정 정보를 모두 입력해주세요.")
@@ -1179,91 +1318,35 @@ if st.button("데이터 수집 시작", type="primary"):
             # 미리보기
             st.dataframe(final_df.head())
             
-            # 한글명 컬럼 추가
-            final_df_with_korean = final_df.copy()
-            
-            # Reporter 한글명 추가 (컬럼 체크)
-            if 'reporterCode' in final_df_with_korean.columns:
-                final_df_with_korean['reporterNameKor'] = final_df_with_korean['reporterCode'].astype(str).map(COUNTRY_NAMES)
-                # 매핑되지 않은 경우 처리
-                if 'reporterName' in final_df_with_korean.columns:
-                    final_df_with_korean['reporterNameKor'] = final_df_with_korean['reporterNameKor'].fillna(final_df_with_korean['reporterName'])
-                else:
-                    final_df_with_korean['reporterNameKor'] = final_df_with_korean['reporterNameKor'].fillna('')
-            
-            # Partner 한글명 추가 (컬럼 체크)
-            if 'partnerCode' in final_df_with_korean.columns:
-                final_df_with_korean['partnerNameKor'] = final_df_with_korean['partnerCode'].astype(str).map(COUNTRY_NAMES)
-                # 매핑되지 않은 경우 처리
-                if 'partnerName' in final_df_with_korean.columns:
-                    final_df_with_korean['partnerNameKor'] = final_df_with_korean['partnerNameKor'].fillna(final_df_with_korean['partnerName'])
-                else:
-                    final_df_with_korean['partnerNameKor'] = final_df_with_korean['partnerNameKor'].fillna('')
-            
-            # HS Code 한글명 추가 (컬럼 체크)
-            if 'cmdCode' in final_df_with_korean.columns:
+            # HS Code 한글명 추가 (cmdCodeKor 컬럼 추가)
+            final_df_download = final_df.copy()
+            if 'cmdCode' in final_df_download.columns:
                 hs_code_korean_map = {
                     "0201": "냉장쇠고기",
                     "0202": "냉동쇠고기"
                 }
-                final_df_with_korean['cmdCodeKor'] = final_df_with_korean['cmdCode'].astype(str).map(hs_code_korean_map)
-                # 매핑되지 않은 경우 빈 값
-                final_df_with_korean['cmdCodeKor'] = final_df_with_korean['cmdCodeKor'].fillna('')
-            
-            # 컬럼 순서 재배치 (한글명을 원래 컬럼 바로 뒤에 배치)
-            cols = list(final_df_with_korean.columns)
-            
-            # reporterCode, reporterName 뒤에 reporterNameKor 삽입
-            if 'reporterNameKor' in cols:
-                cols.remove('reporterNameKor')
-                if 'reporterName' in cols:
-                    reporter_idx = cols.index('reporterName') + 1
-                elif 'reporterCode' in cols:
-                    reporter_idx = cols.index('reporterCode') + 1
-                else:
-                    reporter_idx = len(cols)
-                cols.insert(reporter_idx, 'reporterNameKor')
-            
-            # partnerCode, partnerName 뒤에 partnerNameKor 삽입
-            if 'partnerNameKor' in cols:
-                cols.remove('partnerNameKor')
-                if 'partnerName' in cols:
-                    partner_idx = cols.index('partnerName') + 1
-                elif 'partnerCode' in cols:
-                    partner_idx = cols.index('partnerCode') + 1
-                else:
-                    partner_idx = len(cols)
-                cols.insert(partner_idx, 'partnerNameKor')
-            
-            # cmdCode 뒤에 cmdCodeKor 삽입
-            if 'cmdCodeKor' in cols:
-                cols.remove('cmdCodeKor')
-                if 'cmdCode' in cols:
-                    cmd_idx = cols.index('cmdCode') + 1
-                else:
-                    cmd_idx = len(cols)
-                cols.insert(cmd_idx, 'cmdCodeKor')
-            
-            final_df_with_korean = final_df_with_korean[cols]
-            
-            # 다운로드 형식 선택
-            download_format = st.radio(
-                "다운로드 형식 선택:",
-                ["CSV (쉼표 구분)", "TSV (탭 구분)"],
-                horizontal=True,
-                key="download_format"
-            )
+                final_df_download['cmdCodeKor'] = final_df_download['cmdCode'].astype(str).map(hs_code_korean_map)
+                final_df_download['cmdCodeKor'] = final_df_download['cmdCodeKor'].fillna('')
+                
+                # cmdCode 뒤에 cmdCodeKor 삽입
+                cols = list(final_df_download.columns)
+                if 'cmdCodeKor' in cols:
+                    cols.remove('cmdCodeKor')
+                    if 'cmdCode' in cols:
+                        cmd_idx = cols.index('cmdCode') + 1
+                        cols.insert(cmd_idx, 'cmdCodeKor')
+                    final_df_download = final_df_download[cols]
             
             # 다운로드
             safe_ptn = "Custom" if quick_select == "선택 안함" else quick_select.split("(")[0].strip()
             
             if "CSV" in download_format:
-                file_data = final_df_with_korean.to_csv(index=False, encoding='utf-8-sig')
+                file_data = final_df_download.to_csv(index=False, encoding='utf-8-sig')
                 file_name = f"TradeData_{safe_ptn}_{target_years[0]}.csv"
                 mime_type = "text/csv"
                 button_label = "📥 결과 다운로드 (CSV)"
             else:  # TSV
-                file_data = final_df_with_korean.to_csv(index=False, sep='\t', encoding='utf-8-sig')
+                file_data = final_df_download.to_csv(index=False, sep='\t', encoding='utf-8-sig')
                 file_name = f"TradeData_{safe_ptn}_{target_years[0]}.tsv"
                 mime_type = "text/tab-separated-values"
                 button_label = "📥 결과 다운로드 (TSV)"
