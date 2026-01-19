@@ -665,6 +665,8 @@ def preprocess_dataframe(df, original_hs_codes):
     # 대륙명 한글 변환
     def get_continent_kor(continent_eng):
         continent_map = {
+            "Intra-EU27": "EU 역내",
+            "Extra-EU27": "EU 역외",
             "Europe": "유럽",
             "Africa": "아프리카",
             "Middle East": "중동",
@@ -684,11 +686,22 @@ def preprocess_dataframe(df, original_hs_codes):
         result['reporterContinent'] = result['reporterCode'].apply(get_continent_eng)
         result['reporterContinentKor'] = result['reporterContinent'].apply(get_continent_kor)
     
-    # partnerCode에서 영문/한글/대륙명 생성
+    # partnerCode에서 영문/한글/대륙명 생성 (EU 역내/역외 구분)
     if 'partnerCode' in result.columns:
         result['partnerName'] = result['partnerCode'].apply(get_country_name_eng)
         result['partnerNameKor'] = result['partnerCode'].apply(get_country_name_kor)
-        result['partnerContinent'] = result['partnerCode'].apply(get_continent_eng)
+        
+        # Partner 대륙 구분 (EU 역내/역외 분리)
+        def get_partner_continent_with_eu_split(code):
+            code_str = str(code).zfill(3)
+            if code_str in EU27_LIST:
+                return "Intra-EU27"
+            elif code_str in CONTINENT_EUROPE:
+                return "Extra-EU27"
+            else:
+                return get_continent_name(code_str)
+        
+        result['partnerContinent'] = result['partnerCode'].apply(get_partner_continent_with_eu_split)
         result['partnerContinentKor'] = result['partnerContinent'].apply(get_continent_kor)
     
     # cmdCode를 원본 HS 코드 형식으로 변환 (앞에 0 추가)
@@ -863,11 +876,20 @@ def create_alluvial_diagram(df, font_size=20,
     hscode_volumes = df_clean.groupby('cmdCode')['netWgt (kg)'].sum()
     
     # Reporter 한글 변환 (use_korean_labels=True 시)
+    # reporterName과 reporterCode의 매핑이 필요
+    if 'reporterCode' in df.columns:
+        # 원본 df에서 reporterName -> reporterCode 매핑 생성
+        reporter_name_to_code = dict(zip(df['reporterName'].unique(), df['reporterCode'].unique()))
+    else:
+        reporter_name_to_code = {}
+    
     reporters_display = []
     for r in reporters:
         if use_korean_labels:
-            # COUNTRY_NAMES에서 한글명 가져오기 (이미 한글임)
-            korean_name = COUNTRY_NAMES.get(str(r), r)
+            # reporterName에서 코드를 찾고, 코드로 한글명 조회
+            code = reporter_name_to_code.get(r, '')
+            code_str = str(code).zfill(3) if code else ''
+            korean_name = COUNTRY_NAMES.get(code_str, r)
             reporters_display.append(korean_name)
         else:
             reporters_display.append(r)
