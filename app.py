@@ -1226,12 +1226,12 @@ if st.button("데이터 수집 시작", type="primary"):
             # Reporter 한글명 추가
             final_df_with_korean['reporterNameKor'] = final_df_with_korean['reporterCode'].astype(str).map(COUNTRY_NAMES)
             # 매핑되지 않은 경우 원래 이름 사용
-            final_df_with_korean['reporterNameKor'] = final_df_with_korean['reporterNameKor'].fillna(final_df_with_korean['reporterDesc'])
+            final_df_with_korean['reporterNameKor'] = final_df_with_korean['reporterNameKor'].fillna(final_df_with_korean['reporterName'])
             
             # Partner 한글명 추가
             final_df_with_korean['partnerNameKor'] = final_df_with_korean['partnerCode'].astype(str).map(COUNTRY_NAMES)
             # 매핑되지 않은 경우 원래 이름 사용
-            final_df_with_korean['partnerNameKor'] = final_df_with_korean['partnerNameKor'].fillna(final_df_with_korean['partnerDesc'])
+            final_df_with_korean['partnerNameKor'] = final_df_with_korean['partnerNameKor'].fillna(final_df_with_korean['partnerName'])
             
             # HS Code 한글명 추가
             hs_code_korean_map = {
@@ -1245,16 +1245,16 @@ if st.button("데이터 수집 시작", type="primary"):
             # 컬럼 순서 재배치 (한글명을 원래 컬럼 바로 뒤에 배치)
             cols = list(final_df_with_korean.columns)
             
-            # reporterCode, reporterDesc 뒤에 reporterNameKor 삽입
+            # reporterCode, reporterName 뒤에 reporterNameKor 삽입
             if 'reporterCode' in cols and 'reporterNameKor' in cols:
                 cols.remove('reporterNameKor')
-                reporter_idx = cols.index('reporterDesc') + 1 if 'reporterDesc' in cols else cols.index('reporterCode') + 1
+                reporter_idx = cols.index('reporterName') + 1 if 'reporterName' in cols else cols.index('reporterCode') + 1
                 cols.insert(reporter_idx, 'reporterNameKor')
             
-            # partnerCode, partnerDesc 뒤에 partnerNameKor 삽입
+            # partnerCode, partnerName 뒤에 partnerNameKor 삽입
             if 'partnerCode' in cols and 'partnerNameKor' in cols:
                 cols.remove('partnerNameKor')
-                partner_idx = cols.index('partnerDesc') + 1 if 'partnerDesc' in cols else cols.index('partnerCode') + 1
+                partner_idx = cols.index('partnerName') + 1 if 'partnerName' in cols else cols.index('partnerCode') + 1
                 cols.insert(partner_idx, 'partnerNameKor')
             
             # cmdCode 뒤에 cmdCodeKor 삽입
