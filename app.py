@@ -994,8 +994,8 @@ def create_alluvial_diagram(df, font_size=20,
         if node in reporters_display:
             node_colors.append(reporter_color)
             font_colors.append(reporter_font_color)
-        elif node.startswith('HS-') or node in [HS_CODE_KOREAN.get(c, f"HS-{c}") for c in cmdcodes]:
-            # HS Code 노드 (영문 HS-prefix 또는 한글명)
+        elif node in cmdcodes_prefixed:
+            # HS Code 노드 (cmdcodes_prefixed에 포함된 모든 노드)
             node_colors.append(hscode_color)
             font_colors.append(hscode_font_color)
         else:
