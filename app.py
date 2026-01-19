@@ -809,10 +809,24 @@ def create_alluvial_diagram(df, font_size=20,
         )
     )])
     
+    # Sankey 다이어그램 노드를 드래그 가능하게 설정
+    fig.update_traces(
+        arrangement='freeform'  # 노드를 자유롭게 드래그하여 재배치 가능
+    )
+    
     fig.update_layout(
         title_text=custom_title,
-        font=dict(size=font_size),
-        height=diagram_height
+        font=dict(
+            size=font_size,
+            family="Arial, sans-serif",
+            color=reporter_font_color
+        ),
+        height=diagram_height,
+        xaxis={'showgrid': False, 'zeroline': False, 'visible': False},
+        yaxis={'showgrid': False, 'zeroline': False, 'visible': False},
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=10, r=10, t=50, b=10)
     )
     
     return fig
@@ -942,22 +956,10 @@ with st.sidebar:
         # 내부적으로 사용할 값으로 변환
         partner_sort = "descending" if "내림차순" in partner_sort_order else "ascending"
         
-        st.caption("노드 순서 변경")
-        node_order = st.selectbox(
-            "다이어그램 흐름 방향:",
-            [
-                "Reporter → HS Code → Partner",
-                "Reporter → Partner → HS Code",
-                "HS Code → Reporter → Partner",
-                "HS Code → Partner → Reporter",
-                "Partner → Reporter → HS Code",
-                "Partner → HS Code → Reporter"
-            ],
-            index=0,
-            key="node_order_select"
-        )
-        # 내부적으로 사용할 값으로 변환 (공백 제거)
-        node_order_value = node_order.replace(" ", "").replace("→", "-").replace("HSCode", "HS").replace("Partner", "Partner")
+        st.info("💡 **다이어그램 노드를 드래그하여 순서를 변경할 수 있습니다!**")
+        
+        # 노드 순서는 항상 기본값 사용 (드래그로 변경 가능)
+        node_order_value = "Reporter-HS-Partner"
 
 
 
