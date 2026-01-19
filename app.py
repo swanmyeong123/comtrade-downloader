@@ -319,6 +319,87 @@ PARTNER_GROUPS = {
     "중국 (China)": "156"
 }
 
+# 국가 코드 → 한글명 매핑
+COUNTRY_NAMES = {
+    # 동아시아
+    "156": "중국", "344": "홍콩", "392": "일본", "408": "북한", "410": "한국", 
+    "446": "마카오", "496": "몽골", "158": "대만",
+    # 동남아시아
+    "096": "브루나이", "104": "미얀마", "116": "캄보디아", "360": "인도네시아", 
+    "418": "라오스", "458": "말레이시아", "608": "필리핀", "702": "싱가포르", 
+    "764": "태국", "626": "동티모르", "704": "베트남",
+    # 남아시아
+    "004": "아프가니스탄", "050": "방글라데시", "064": "부탄", "356": "인도", 
+    "462": "몰디브", "524": "네팔", "586": "파키스탄", "144": "스리랑카",
+    # 중앙아시아
+    "398": "카자흐스탄", "417": "키르기스스탄", "762": "타지키스탄", 
+    "795": "투르크메니스탄", "860": "우즈베키스탄",
+    # 서아시아 (중동)
+    "051": "아르메니아", "031": "아제르바이잔", "048": "바레인", "196": "키프로스", 
+    "268": "조지아", "368": "이라크", "376": "이스라엘", "400": "요르단", 
+    "414": "쿠웨이트", "422": "레바논", "275": "팔레스타인", "512": "오만", 
+    "634": "카타르", "682": "사우디아라비아", "760": "시리아", "792": "터키", 
+    "784": "아랍에미리트", "887": "예멘",
+    # 유럽 - 서유럽
+    "040": "오스트리아", "056": "벨기에", "250": "프랑스", "276": "독일", 
+    "438": "리히텐슈타인", "442": "룩셈부르크", "492": "모나코", "528": "네덜란드", 
+    "756": "스위스",
+    # 유럽 - 북유럽
+    "208": "덴마크", "233": "에스토니아", "246": "핀란드", "352": "아이슬란드", 
+    "372": "아일랜드", "428": "라트비아", "440": "리투아니아", "578": "노르웨이", 
+    "752": "스웨덴", "826": "영국",
+    # 유럽 - 남유럽
+    "008": "알바니아", "020": "안도라", "070": "보스니아헤르체고비나", "191": "크로아티아", 
+    "292": "지브롤터", "300": "그리스", "336": "바티칸", "380": "이탈리아", 
+    "470": "몰타", "499": "몬테네그로", "620": "포르투갈", "674": "산마리노", 
+    "688": "세르비아", "705": "슬로베니아", "724": "스페인", "807": "북마케도니아",
+    # 유럽 - 동유럽
+    "112": "벨라루스", "100": "불가리아", "203": "체코", "348": "헝가리", 
+    "616": "폴란드", "498": "몰도바", "642": "루마니아", "643": "러시아", 
+    "703": "슬로바키아", "804": "우크라이나",
+    # 북미
+    "060": "버뮤다", "124": "캐나다", "304": "그린란드", "666": "생피에르미클롱", 
+    "842": "미국",
+    # 중남미 - 중미
+    "084": "벨리즈", "188": "코스타리카", "222": "엘살바도르", "320": "과테말라", 
+    "340": "온두라스", "484": "멕시코", "558": "니카라과", "591": "파나마",
+    # 중남미 - 카리브해
+    "028": "앤티가바부다", "044": "바하마", "052": "바베이도스", "192": "쿠바", 
+    "212": "도미니카", "214": "도미니카공화국", "308": "그레나다", "332": "아이티", 
+    "388": "자메이카", "659": "세인트키츠네비스", "662": "세인트루시아", 
+    "670": "세인트빈센트그레나딘", "780": "트리니다드토바고",
+    # 중남미 - 남미
+    "032": "아르헨티나", "068": "볼리비아", "076": "브라질", "152": "칠레", 
+    "170": "콜롬비아", "218": "에콰도르", "328": "가이아나", "600": "파라과이", 
+    "604": "페루", "740": "수리남", "858": "우루과이", "862": "베네수엘라",
+    # 아프리카 - 북아프리카
+    "012": "알제리", "818": "이집트", "434": "리비아", "504": "모로코", 
+    "729": "수단", "788": "튀니지", "732": "서사하라",
+    # 아프리카 - 동아프리카  
+    "108": "부룬디", "086": "영국령인도양지역", "174": "코모로", "262": "지부티", 
+    "232": "에리트레아", "231": "에티오피아", "404": "케냐", "480": "모리셔스", 
+    "175": "마요트", "454": "말라위", "508": "모잠비크", "638": "레위니옹", 
+    "646": "르완다", "690": "세이셸", "706": "소말리아", "728": "남수단", 
+    "800": "우간다", "834": "탄자니아", "894": "잠비아", "716": "짐바브웨",
+    # 아프리카 - 중앙아프리카
+    "024": "앙골라", "120": "카메룬", "140": "중앙아프리카공화국", "148": "차드", 
+    "178": "콩고", "180": "콩고민주공화국", "226": "적도기니", "266": "가봉", 
+    "678": "상투메프린시페",
+    # 아프리카 - 남아프리카
+    "072": "보츠와나", "426": "레소토", "516": "나미비아", "710": "남아프리카공화국", 
+    "748": "에스와티니",
+    # 아프리카 - 서아프리카
+    "204": "베냉", "132": "카보베르데", "270": "감비아", "288": "가나", 
+    "324": "기니", "624": "기니비사우", "384": "코트디부아르", "430": "라이베리아", 
+    "466": "말리", "478": "모리타니", "562": "니제르", "566": "나이지리아", 
+    "654": "세인트헬레나", "686": "세네갈", "694": "시에라리온", "768": "토고", 
+    "854": "부르키나파소",
+    # 오세아니아
+    "036": "호주", "162": "크리스마스섬", "166": "코코스제도", "554": "뉴질랜드", 
+    "242": "피지", "540": "뉴칼레도니아", "598": "파푸아뉴기니", 
+    "090": "솔로몬제도", "548": "바누아투"
+}
+
 # 대륙 이름 매핑 (코드 → 대륙명)
 def get_continent_name(country_code):
     """국가 코드로부터 대륙명 반환"""
@@ -545,7 +626,7 @@ def create_alluvial_diagram(df, font_size=20,
                             top_n_partners=None,
                             partner_sort_order="descending",
                             node_order="Reporter-HS-Partner",
-                            translate_to_korean=False):
+                            use_korean_labels=False):
     """
     Plotly Sankey diagram 생성
     Reporter → cmdCode → Partner (두께: netWgt)
@@ -569,8 +650,15 @@ def create_alluvial_diagram(df, font_size=20,
     - top_n_partners: 상위 N개국만 표시, 나머지는 "기타"로 그룹화 (None이면 전체 표시)
     - partner_sort_order: Partner 정렬 순서 ("ascending" 또는 "descending")
     - node_order: 노드 순서 ("Reporter-HS-Partner", "Reporter-Partner-HS", "HS-Reporter-Partner" 등)
+    - use_korean_labels: True면 노드 레이블을 한글로 변환
     """
     import plotly.graph_objects as go
+    
+    # HS Code 한글 매핑
+    HS_CODE_KOREAN = {
+        "0201": "냉장쇠고기",
+        "0202": "냉동쇠고기"
+    }
     
     if df.empty or 'netWgt (kg)' not in df.columns:
         return None
@@ -653,62 +741,68 @@ def create_alluvial_diagram(df, font_size=20,
     # HS Code별 물량 계산
     hscode_volumes = df_clean.groupby('cmdCode')['netWgt (kg)'].sum()
     
-    # HS Code 한글 매핑
-    hscode_korean_map = {
-        "0201": "냉장쇠고기",
-        "0202": "냉동쇠고기"
-    }
+    # Reporter 한글 변환 (use_korean_labels=True 시)
+    reporters_display = []
+    for r in reporters:
+        if use_korean_labels:
+            # COUNTRY_NAMES에서 한글명 가져오기 (이미 한글임)
+            korean_name = COUNTRY_NAMES.get(str(r), r)
+            reporters_display.append(korean_name)
+        else:
+            reporters_display.append(r)
     
-    # cmdCode에 접두사 추가 (비율 포함 여부 및 한글 변환에 따라)
+    # cmdCode에 접두사 추가 및 한글 변환 (비율 포함 여부에 따라)
     cmdcodes_prefixed = []
     for c in cmdcodes:
-        if translate_to_korean and c in hscode_korean_map:
-            # 한글 변환 활성화 + 매핑 존재
-            korean_name = hscode_korean_map[c]
+        if use_korean_labels:
+            # HS Code 한글 변환
+            korean_hs = HS_CODE_KOREAN.get(c, f"HS-{c}")
             if show_hscode_percentage and total_volume > 0:
                 pct = (hscode_volumes.get(c, 0) / total_volume) * 100
-                cmdcodes_prefixed.append(f"{korean_name}\n(HS-{c}, {pct:.1f}%)")
+                cmdcodes_prefixed.append(f"{korean_hs}\n({pct:.1f}%)")
             else:
-                cmdcodes_prefixed.append(f"{korean_name}\n(HS-{c})")
+                cmdcodes_prefixed.append(korean_hs)
         else:
-            # 한글 변환 비활성화 또는 매핑 없음
+            # 영문명 (기존)
             if show_hscode_percentage and total_volume > 0:
                 pct = (hscode_volumes.get(c, 0) / total_volume) * 100
                 cmdcodes_prefixed.append(f"HS-{c}\n({pct:.1f}%)")
             else:
                 cmdcodes_prefixed.append(f"HS-{c}")
     
-    # Partner 레이블 (비율 포함 여부에 따라)
+    # Partner 레이블 및 한글 변환 (비율 포함 여부에 따라)
     partners_labeled = []
     for p in partners:
-        if show_partner_percentage and total_volume > 0:
-            pct = (partner_volumes.get(p, 0) / total_volume) * 100
-            partners_labeled.append(f"{p}\n({pct:.1f}%)")
+        if use_korean_labels:
+            # Partner 한글 변환 (대륙명 변환)
+            korean_partner_map = {
+                "Intra-EU27": "EU 역내",
+                "Extra-EU27": "EU 역외",
+                "Europe": "유럽",
+                "Africa": "아프리카",
+                "Middle East": "중동",
+                "East Asia": "동아시아",
+                "Southeast Asia": "동남아시아",
+                "North America": "북미",
+                "Central/South America": "중남미",
+                "Oceania": "오세아니아",
+                "Others": "기타"
+            }
+            korean_p = korean_partner_map.get(p, COUNTRY_NAMES.get(str(p), p))
+            if show_partner_percentage and total_volume > 0:
+                pct = (partner_volumes.get(p, 0) / total_volume) * 100
+                partners_labeled.append(f"{korean_p}\n({pct:.1f}%)")
+            else:
+                partners_labeled.append(korean_p)
         else:
-            partners_labeled.append(p)
+            # 영문명 (기존)
+            if show_partner_percentage and total_volume > 0:
+                pct = (partner_volumes.get(p, 0) / total_volume) * 100
+                partners_labeled.append(f"{p}\n({pct:.1f}%)")
+            else:
+                partners_labeled.append(p)
     
-    # 노드 순서 결정 (사용자 선택에 따라)
-    if node_order == "Reporter-HS-Partner":
-        all_nodes = reporters + cmdcodes_prefixed + partners_labeled
-        first_type, second_type, third_type = "reporter", "hscode", "partner"
-    elif node_order == "Reporter-Partner-HS":
-        all_nodes = reporters + partners_labeled + cmdcodes_prefixed
-        first_type, second_type, third_type = "reporter", "partner", "hscode"
-    elif node_order == "HS-Reporter-Partner":
-        all_nodes = cmdcodes_prefixed + reporters + partners_labeled
-        first_type, second_type, third_type = "hscode", "reporter", "partner"
-    elif node_order == "HS-Partner-Reporter":
-        all_nodes = cmdcodes_prefixed + partners_labeled + reporters
-        first_type, second_type, third_type = "hscode", "partner", "reporter"
-    elif node_order == "Partner-Reporter-HS":
-        all_nodes = partners_labeled + reporters + cmdcodes_prefixed
-        first_type, second_type, third_type = "partner", "reporter", "hscode"
-    elif node_order == "Partner-HS-Reporter":
-        all_nodes = partners_labeled + cmdcodes_prefixed + reporters
-        first_type, second_type, third_type = "partner", "hscode", "reporter"
-    else:  # 기본값: Reporter-HS-Partner
-        all_nodes = reporters + cmdcodes_prefixed + partners_labeled
-        first_type, second_type, third_type = "reporter", "hscode", "partner"
+    all_nodes = reporters_display + cmdcodes_prefixed + partners_labeled
     
     node_indices = {node: i for i, node in enumerate(all_nodes)}
     
@@ -721,7 +815,9 @@ def create_alluvial_diagram(df, font_size=20,
     
     # Reporter-HS 링크
     link_rep_hs = df_clean.groupby(['reporterName', 'cmdCode'])['netWgt (kg)'].sum().reset_index()
-    sources_rep_hs = [node_indices[r] for r in link_rep_hs['reporterName']]
+    # reporters_display로 매핑
+    reporter_to_display = {r: reporters_display[i] for i, r in enumerate(reporters)}
+    sources_rep_hs = [node_indices[reporter_to_display[r]] for r in link_rep_hs['reporterName']]
     targets_rep_hs = [node_indices[cmdcode_to_label[c]] for c in link_rep_hs['cmdCode']]
     values_rep_hs = link_rep_hs['netWgt (kg)'].tolist()
     
@@ -733,7 +829,7 @@ def create_alluvial_diagram(df, font_size=20,
     
     # Reporter-Partner 링크
     link_rep_ptn = df_clean.groupby(['reporterName', 'partnerName'])['netWgt (kg)'].sum().reset_index()
-    sources_rep_ptn = [node_indices[r] for r in link_rep_ptn['reporterName']]
+    sources_rep_ptn = [node_indices[reporter_to_display[r]] for r in link_rep_ptn['reporterName']]
     targets_rep_ptn = [node_indices[partner_to_label[p]] for p in link_rep_ptn['partnerName']]
     values_rep_ptn = link_rep_ptn['netWgt (kg)'].tolist()
     
@@ -786,10 +882,11 @@ def create_alluvial_diagram(df, font_size=20,
     node_colors = []
     font_colors = []
     for node in all_nodes:
-        if node in reporters:
+        if node in reporters_display:
             node_colors.append(reporter_color)
             font_colors.append(reporter_font_color)
-        elif node.startswith('HS-'):
+        elif node.startswith('HS-') or node in [HS_CODE_KOREAN.get(c, f"HS-{c}") for c in cmdcodes]:
+            # HS Code 노드 (영문 HS-prefix 또는 한글명)
             node_colors.append(hscode_color)
             font_colors.append(hscode_font_color)
         else:
@@ -963,8 +1060,8 @@ with st.sidebar:
         show_hscode_percentage = st.checkbox("HS Code 비율 표시", value=False)
         show_partner_percentage = st.checkbox("Partner 비율 표시", value=False)
         
-        st.caption("HS Code 한글 변환")
-        translate_hscode_to_korean = st.checkbox("HS Code를 한글로 표시", value=False)
+        st.caption("한글 변환")
+        use_korean_labels = st.checkbox("한글명으로 표시", value=False, help="Reporter, HS Code, Partner를 한글명으로 변환")
 
 
 
@@ -1123,14 +1220,78 @@ if st.button("데이터 수집 시작", type="primary"):
             # 미리보기
             st.dataframe(final_df.head())
             
+            # 한글명 컬럼 추가
+            final_df_with_korean = final_df.copy()
+            
+            # Reporter 한글명 추가
+            final_df_with_korean['reporterNameKor'] = final_df_with_korean['reporterCode'].astype(str).map(COUNTRY_NAMES)
+            # 매핑되지 않은 경우 원래 이름 사용
+            final_df_with_korean['reporterNameKor'] = final_df_with_korean['reporterNameKor'].fillna(final_df_with_korean['reporterDesc'])
+            
+            # Partner 한글명 추가
+            final_df_with_korean['partnerNameKor'] = final_df_with_korean['partnerCode'].astype(str).map(COUNTRY_NAMES)
+            # 매핑되지 않은 경우 원래 이름 사용
+            final_df_with_korean['partnerNameKor'] = final_df_with_korean['partnerNameKor'].fillna(final_df_with_korean['partnerDesc'])
+            
+            # HS Code 한글명 추가
+            hs_code_korean_map = {
+                "0201": "냉장쇠고기",
+                "0202": "냉동쇠고기"
+            }
+            final_df_with_korean['cmdCodeKor'] = final_df_with_korean['cmdCode'].astype(str).map(hs_code_korean_map)
+            # 매핑되지 않은 경우 빈 값
+            final_df_with_korean['cmdCodeKor'] = final_df_with_korean['cmdCodeKor'].fillna('')
+            
+            # 컬럼 순서 재배치 (한글명을 원래 컬럼 바로 뒤에 배치)
+            cols = list(final_df_with_korean.columns)
+            
+            # reporterCode, reporterDesc 뒤에 reporterNameKor 삽입
+            if 'reporterCode' in cols and 'reporterNameKor' in cols:
+                cols.remove('reporterNameKor')
+                reporter_idx = cols.index('reporterDesc') + 1 if 'reporterDesc' in cols else cols.index('reporterCode') + 1
+                cols.insert(reporter_idx, 'reporterNameKor')
+            
+            # partnerCode, partnerDesc 뒤에 partnerNameKor 삽입
+            if 'partnerCode' in cols and 'partnerNameKor' in cols:
+                cols.remove('partnerNameKor')
+                partner_idx = cols.index('partnerDesc') + 1 if 'partnerDesc' in cols else cols.index('partnerCode') + 1
+                cols.insert(partner_idx, 'partnerNameKor')
+            
+            # cmdCode 뒤에 cmdCodeKor 삽입
+            if 'cmdCode' in cols and 'cmdCodeKor' in cols:
+                cols.remove('cmdCodeKor')
+                cmd_idx = cols.index('cmdCode') + 1
+                cols.insert(cmd_idx, 'cmdCodeKor')
+            
+            final_df_with_korean = final_df_with_korean[cols]
+            
+            # 다운로드 형식 선택
+            download_format = st.radio(
+                "다운로드 형식 선택:",
+                ["CSV (쉼표 구분)", "TSV (탭 구분)"],
+                horizontal=True,
+                key="download_format"
+            )
+            
             # 다운로드
             safe_ptn = "Custom" if quick_select == "선택 안함" else quick_select.split("(")[0].strip()
-            csv = final_df.to_csv(index=False).encode('utf-8-sig')
+            
+            if "CSV" in download_format:
+                file_data = final_df_with_korean.to_csv(index=False, encoding='utf-8-sig')
+                file_name = f"TradeData_{safe_ptn}_{target_years[0]}.csv"
+                mime_type = "text/csv"
+                button_label = "📥 결과 다운로드 (CSV)"
+            else:  # TSV
+                file_data = final_df_with_korean.to_csv(index=False, sep='\t', encoding='utf-8-sig')
+                file_name = f"TradeData_{safe_ptn}_{target_years[0]}.tsv"
+                mime_type = "text/tab-separated-values"
+                button_label = "📥 결과 다운로드 (TSV)"
+            
             st.download_button(
-                label="📥 결과 다운로드 (CSV)",
-                data=csv,
-                file_name=f"TradeData_{safe_ptn}_{target_years[0]}.csv",
-                mime="text/csv",
+                label=button_label,
+                data=file_data,
+                file_name=file_name,
+                mime=mime_type,
             )
             
             # 세션 상태에 데이터 저장 (다이어그램 설정 변경 시 재사용)
@@ -1175,32 +1336,11 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
             merge_eu27_reporter=merge_eu27,
             show_hscode_percentage=show_hscode_percentage,
             show_partner_percentage=show_partner_percentage,
-            translate_to_korean=translate_hscode_to_korean,
-            top_n_partners=top_n
+            top_n_partners=top_n,
+            use_korean_labels=use_korean_labels
         )
         if fig:
             st.plotly_chart(fig, use_container_width=True, key="main_diagram")
-            
-            # 다운로드용 다이어그램 (제목 없이)
-            fig_download = create_alluvial_diagram(
-                st.session_state['final_df'],
-                font_size=diagram_font_size,
-                reporter_color=reporter_color,
-                hscode_color=hscode_color,
-                partner_color=partner_color,
-                reporter_font_color=reporter_font_color,
-                hscode_font_color=hscode_font_color,
-                partner_font_color=partner_font_color,
-                link_opacity=link_opacity,
-                diagram_height=diagram_height,
-                node_thickness=node_thickness,
-                group_by_continent=group_by_continent,
-                custom_title="",  # 다운로드용은 제목 없음
-                merge_eu27_reporter=merge_eu27,
-                show_hscode_percentage=show_hscode_percentage,
-                show_partner_percentage=show_partner_percentage,
-                top_n_partners=top_n
-            )
         else:
             st.info("다이어그램을 생성할 데이터가 충분하지 않습니다. (물량 데이터 필요)")
     except Exception as e:
