@@ -791,6 +791,43 @@ def create_alluvial_diagram(df, font_size=20,
     # 링크 색상 (회색 + 투명도)
     link_color = f'rgba(100, 100, 100, {link_opacity})'
     
+    # 노드 위치 계산 (x, y 좌표) - Partner 정렬 순서 강제
+    node_x = []
+    node_y = []
+    
+    num_reporters = len(reporters)
+    num_hscodes = len(cmdcodes_prefixed)
+    num_partners = len(partners_labeled)
+    
+    # Reporter 노드 (왼쪽, x=0.0)
+    for i in range(num_reporters):
+        node_x.append(0.0)
+        if num_reporters > 1:
+            node_y.append(i / (num_reporters - 1))
+        else:
+            node_y.append(0.5)
+    
+    # HS Code 노드 (중간, x=0.5)
+    for i in range(num_hscodes):
+        node_x.append(0.5)
+        if num_hscodes > 1:
+            node_y.append(i / (num_hscodes - 1))
+        else:
+            node_y.append(0.5)
+    
+    # Partner 노드 (오른쪽, x=1.0) - 정렬 순서대로 위에서 아래로
+    for i in range(num_partners):
+        node_x.append(1.0)
+        if num_partners > 1:
+            # ascending=False(내림차순)이면 0,1,2,3... 순서 (위에서 아래)
+            # ascending=True(오름차순)이면 역순
+            if partner_sort_order == "ascending":
+                node_y.append(1.0 - (i / (num_partners - 1)))  # 역순
+            else:
+                node_y.append(i / (num_partners - 1))  # 정렬 순서대로
+        else:
+            node_y.append(0.5)
+    
     # Sankey 다이어그램 생성 (Plotly Sankey는 노드별 폰트 색상 미지원)
     fig = go.Figure(data=[go.Sankey(
         textfont=dict(size=font_size, color=reporter_font_color),
@@ -799,7 +836,9 @@ def create_alluvial_diagram(df, font_size=20,
             thickness=node_thickness,
             line=dict(color="black", width=0.5),
             label=all_nodes,
-            color=node_colors
+            color=node_colors,
+            x=node_x,  # x 좌표 지정
+            y=node_y   # y 좌표 지정 (정렬 순서 강제)
         ),
         link=dict(
             source=sources,
