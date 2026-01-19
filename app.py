@@ -550,17 +550,10 @@ def preprocess_dataframe(df, original_hs_codes):
     
     result = df.copy()
     
-    # 국가 코드를 영문 국가명으로 변환하는 함수
+    # 국가 코드를 영문 국가명으로 변환하는 함수 (코드 그대로 반환)
     def get_country_name(code):
         code_str = str(code).strip()
-        # 먼저 그대로 찾기
-        if code_str in COUNTRY_NAMES:
-            return COUNTRY_NAMES[code_str]
-        # 앞에 0을 붙여서 찾기 (3자리로)
-        padded_code = code_str.zfill(3)
-        if padded_code in COUNTRY_NAMES:
-            return COUNTRY_NAMES[padded_code]
-        # 찾지 못하면 코드 그대로 반환
+        # 코드를 그대로 반환 (영문명 대신 코드 사용)
         return code_str
     
     # reporterCode와 partnerCode에서 영문 국가명 생성
@@ -810,12 +803,9 @@ def create_alluvial_diagram(df, font_size=20,
     cmdcode_to_label = {c: cmdcodes_prefixed[i] for i, c in enumerate(cmdcodes)}
     partner_to_label = {p: partners_labeled[i] for i, p in enumerate(partners)}
     
-    # 링크 생성 (node_order에 따라 동적으로 생성)
-    # 기본 3개의 링크 타입: Reporter-HS, HS-Partner, Reporter-Partner
-    
+    # 링크 생성 (Reporter → HS Code → Partner)
     # Reporter-HS 링크
     link_rep_hs = df_clean.groupby(['reporterName', 'cmdCode'])['netWgt (kg)'].sum().reset_index()
-    # reporters_display로 매핑
     reporter_to_display = {r: reporters_display[i] for i, r in enumerate(reporters)}
     sources_rep_hs = [node_indices[reporter_to_display[r]] for r in link_rep_hs['reporterName']]
     targets_rep_hs = [node_indices[cmdcode_to_label[c]] for c in link_rep_hs['cmdCode']]
@@ -827,41 +817,10 @@ def create_alluvial_diagram(df, font_size=20,
     targets_hs_ptn = [node_indices[partner_to_label[p]] for p in link_hs_ptn['partnerName']]
     values_hs_ptn = link_hs_ptn['netWgt (kg)'].tolist()
     
-    # Reporter-Partner 링크
-    link_rep_ptn = df_clean.groupby(['reporterName', 'partnerName'])['netWgt (kg)'].sum().reset_index()
-    sources_rep_ptn = [node_indices[reporter_to_display[r]] for r in link_rep_ptn['reporterName']]
-    targets_rep_ptn = [node_indices[partner_to_label[p]] for p in link_rep_ptn['partnerName']]
-    values_rep_ptn = link_rep_ptn['netWgt (kg)'].tolist()
-    
-    # 노드 순서에 따라 링크 선택
-    if node_order == "Reporter-HS-Partner":
-        sources = sources_rep_hs + sources_hs_ptn
-        targets = targets_rep_hs + targets_hs_ptn
-        values = values_rep_hs + values_hs_ptn
-    elif node_order == "Reporter-Partner-HS":
-        sources = sources_rep_ptn + sources_hs_ptn
-        targets = targets_rep_ptn + targets_hs_ptn
-        values = values_rep_ptn + values_hs_ptn
-    elif node_order == "HS-Reporter-Partner":
-        sources = sources_rep_hs + sources_rep_ptn
-        targets = targets_rep_hs + targets_rep_ptn
-        values = values_rep_hs + values_rep_ptn
-    elif node_order == "HS-Partner-Reporter":
-        sources = sources_hs_ptn + sources_rep_ptn
-        targets = targets_hs_ptn + targets_rep_ptn
-        values = values_hs_ptn + values_rep_ptn
-    elif node_order == "Partner-Reporter-HS":
-        sources = sources_rep_ptn + sources_rep_hs
-        targets = targets_rep_ptn + targets_rep_hs
-        values = values_rep_ptn + values_rep_hs
-    elif node_order == "Partner-HS-Reporter":
-        sources = sources_hs_ptn + sources_rep_hs
-        targets = targets_hs_ptn + targets_rep_hs
-        values = values_hs_ptn + values_rep_hs
-    else:  # 기본값
-        sources = sources_rep_hs + sources_hs_ptn
-        targets = targets_rep_hs + targets_hs_ptn
-        values = values_rep_hs + values_hs_ptn
+    # 최종 링크 결합
+    sources = sources_rep_hs + sources_hs_ptn
+    targets = targets_rep_hs + targets_hs_ptn
+    values = values_rep_hs + values_hs_ptn
     
     # 대륙별 색상 매핑 (Intra/Extra-EU27 포함)
     continent_colors = {
