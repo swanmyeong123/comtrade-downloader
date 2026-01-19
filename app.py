@@ -945,21 +945,6 @@ with st.sidebar:
         st.caption("비율 표시 (##.#%)")
         show_hscode_percentage = st.checkbox("HS Code 비율 표시", value=False)
         show_partner_percentage = st.checkbox("Partner 비율 표시", value=False)
-        
-        st.caption("Partner 정렬 순서")
-        partner_sort_order = st.radio(
-            "중량 기준 정렬:",
-            ["내림차순 (큰 값 → 작은 값)", "오름차순 (작은 값 → 큰 값)"],
-            index=0,
-            key="partner_sort_order"
-        )
-        # 내부적으로 사용할 값으로 변환
-        partner_sort = "descending" if "내림차순" in partner_sort_order else "ascending"
-        
-        st.info("💡 **다이어그램 노드를 드래그하여 순서를 변경할 수 있습니다!**")
-        
-        # 노드 순서는 항상 기본값 사용 (드래그로 변경 가능)
-        node_order_value = "Reporter-HS-Partner"
 
 
 
@@ -1170,8 +1155,6 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
             merge_eu27_reporter=merge_eu27,
             show_hscode_percentage=show_hscode_percentage,
             show_partner_percentage=show_partner_percentage,
-            partner_sort_order=partner_sort,
-            node_order=node_order_value,
             top_n_partners=top_n
         )
         if fig:
@@ -1195,8 +1178,6 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
                 merge_eu27_reporter=merge_eu27,
                 show_hscode_percentage=show_hscode_percentage,
                 show_partner_percentage=show_partner_percentage,
-                partner_sort_order=partner_sort,
-                node_order=node_order_value,
                 top_n_partners=top_n
             )
             
