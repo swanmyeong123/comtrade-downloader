@@ -544,7 +544,8 @@ def create_alluvial_diagram(df, font_size=20,
                             show_partner_percentage=False,
                             top_n_partners=None,
                             partner_sort_order="descending",
-                            node_order="Reporter-HS-Partner"):
+                            node_order="Reporter-HS-Partner",
+                            translate_to_korean=False):
     """
     Plotly Sankey diagram 생성
     Reporter → cmdCode → Partner (두께: netWgt)
@@ -652,14 +653,30 @@ def create_alluvial_diagram(df, font_size=20,
     # HS Code별 물량 계산
     hscode_volumes = df_clean.groupby('cmdCode')['netWgt (kg)'].sum()
     
-    # cmdCode에 접두사 추가 (비율 포함 여부에 따라)
+    # HS Code 한글 매핑
+    hscode_korean_map = {
+        "0201": "냉장쇠고기",
+        "0202": "냉동쇠고기"
+    }
+    
+    # cmdCode에 접두사 추가 (비율 포함 여부 및 한글 변환에 따라)
     cmdcodes_prefixed = []
     for c in cmdcodes:
-        if show_hscode_percentage and total_volume > 0:
-            pct = (hscode_volumes.get(c, 0) / total_volume) * 100
-            cmdcodes_prefixed.append(f"HS-{c}\n({pct:.1f}%)")
+        if translate_to_korean and c in hscode_korean_map:
+            # 한글 변환 활성화 + 매핑 존재
+            korean_name = hscode_korean_map[c]
+            if show_hscode_percentage and total_volume > 0:
+                pct = (hscode_volumes.get(c, 0) / total_volume) * 100
+                cmdcodes_prefixed.append(f"{korean_name}\n(HS-{c}, {pct:.1f}%)")
+            else:
+                cmdcodes_prefixed.append(f"{korean_name}\n(HS-{c})")
         else:
-            cmdcodes_prefixed.append(f"HS-{c}")
+            # 한글 변환 비활성화 또는 매핑 없음
+            if show_hscode_percentage and total_volume > 0:
+                pct = (hscode_volumes.get(c, 0) / total_volume) * 100
+                cmdcodes_prefixed.append(f"HS-{c}\n({pct:.1f}%)")
+            else:
+                cmdcodes_prefixed.append(f"HS-{c}")
     
     # Partner 레이블 (비율 포함 여부에 따라)
     partners_labeled = []
@@ -945,6 +962,9 @@ with st.sidebar:
         st.caption("비율 표시 (##.#%)")
         show_hscode_percentage = st.checkbox("HS Code 비율 표시", value=False)
         show_partner_percentage = st.checkbox("Partner 비율 표시", value=False)
+        
+        st.caption("HS Code 한글 변환")
+        translate_hscode_to_korean = st.checkbox("HS Code를 한글로 표시", value=False)
 
 
 
@@ -1155,6 +1175,7 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
             merge_eu27_reporter=merge_eu27,
             show_hscode_percentage=show_hscode_percentage,
             show_partner_percentage=show_partner_percentage,
+            translate_to_korean=translate_hscode_to_korean,
             top_n_partners=top_n
         )
         if fig:
@@ -1180,40 +1201,6 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
                 show_partner_percentage=show_partner_percentage,
                 top_n_partners=top_n
             )
-            
-            # 다운로드 버튼들 (PNG, JPG, PPTX)
-            try:
-                from pptx import Presentation
-                from pptx.util import Inches
-                import io
-                
-                # 이미지 생성 (PNG/JPG 공통)
-                img_bytes_png = fig_download.to_image(format="png", width=1200, height=diagram_height, scale=2)
-                img_bytes_jpg = fig_download.to_image(format="jpeg", width=1200, height=diagram_height, scale=2)
-                
-                # PPT 생성
-                prs = Presentation()
-                prs.slide_width = Inches(13.333)
-                prs.slide_height = Inches(7.5)
-                blank_slide_layout = prs.slide_layouts[6]
-                slide = prs.slides.add_slide(blank_slide_layout)
-                img_stream = io.BytesIO(img_bytes_png)
-                slide.shapes.add_picture(img_stream, Inches(0.5), Inches(0.5), width=Inches(12.333))
-                ppt_stream = io.BytesIO()
-                prs.save(ppt_stream)
-                ppt_bytes = ppt_stream.getvalue()
-                
-                # 다운로드 버튼 3개 표시
-                col_d1, col_d2, col_d3 = st.columns(3)
-                with col_d1:
-                    st.download_button("📥 PNG", img_bytes_png, "alluvial_diagram.png", "image/png")
-                with col_d2:
-                    st.download_button("📥 JPG", img_bytes_jpg, "alluvial_diagram.jpg", "image/jpeg")
-                with col_d3:
-                    st.download_button("📥 PPTX", ppt_bytes, "alluvial_diagram.pptx",
-                                       "application/vnd.openxmlformats-officedocument.presentationml.presentation")
-            except Exception as download_error:
-                st.caption("다운로드를 위해 kaleido, python-pptx 패키지가 필요합니다.")
         else:
             st.info("다이어그램을 생성할 데이터가 충분하지 않습니다. (물량 데이터 필요)")
     except Exception as e:
