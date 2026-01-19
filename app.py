@@ -542,7 +542,9 @@ def create_alluvial_diagram(df, font_size=20,
                             merge_eu27_reporter=False,
                             show_hscode_percentage=False,
                             show_partner_percentage=False,
-                            top_n_partners=None):
+                            top_n_partners=None,
+                            partner_sort_order="descending",
+                            node_order="Reporter-HS-Partner"):
     """
     Plotly Sankey diagram 생성
     Reporter → cmdCode → Partner (두께: netWgt)
@@ -564,6 +566,8 @@ def create_alluvial_diagram(df, font_size=20,
     - show_hscode_percentage: True면 HS Code에 비율 표시
     - show_partner_percentage: True면 Partner에 비율 표시
     - top_n_partners: 상위 N개국만 표시, 나머지는 "기타"로 그룹화 (None이면 전체 표시)
+    - partner_sort_order: Partner 정렬 순서 ("ascending" 또는 "descending")
+    - node_order: 노드 순서 ("Reporter-HS-Partner", "Reporter-Partner-HS", "HS-Reporter-Partner" 등)
     """
     import plotly.graph_objects as go
     
@@ -620,8 +624,9 @@ def create_alluvial_diagram(df, font_size=20,
     reporters = df_clean['reporterName'].unique().tolist()
     cmdcodes = df_clean['cmdCode'].unique().tolist()
     
-    # Partner를 물량 기준 내림차순 정렬
-    partner_volumes = df_clean.groupby('partnerName')['netWgt (kg)'].sum().sort_values(ascending=False)
+    # Partner를 물량 기준 정렬 (ascending/descending)
+    ascending_order = (partner_sort_order == "ascending")
+    partner_volumes = df_clean.groupby('partnerName')['netWgt (kg)'].sum().sort_values(ascending=ascending_order)
     partners = partner_volumes.index.tolist()
     
     # 상위 N개국만 표시, 나머지는 "기타"로 그룹화
@@ -638,7 +643,7 @@ def create_alluvial_diagram(df, font_size=20,
         df_clean = df_clean.groupby(['reporterName', 'cmdCode', 'partnerName'])['netWgt (kg)'].sum().reset_index()
         
         # Partner 다시 정렬
-        partner_volumes = df_clean.groupby('partnerName')['netWgt (kg)'].sum().sort_values(ascending=False)
+        partner_volumes = df_clean.groupby('partnerName')['netWgt (kg)'].sum().sort_values(ascending=ascending_order)
         partners = partner_volumes.index.tolist()
     
     # 전체 물량 계산 (비율 계산용)
@@ -665,29 +670,85 @@ def create_alluvial_diagram(df, font_size=20,
         else:
             partners_labeled.append(p)
     
-    all_nodes = reporters + cmdcodes_prefixed + partners_labeled
+    # 노드 순서 결정 (사용자 선택에 따라)
+    if node_order == "Reporter-HS-Partner":
+        all_nodes = reporters + cmdcodes_prefixed + partners_labeled
+        first_type, second_type, third_type = "reporter", "hscode", "partner"
+    elif node_order == "Reporter-Partner-HS":
+        all_nodes = reporters + partners_labeled + cmdcodes_prefixed
+        first_type, second_type, third_type = "reporter", "partner", "hscode"
+    elif node_order == "HS-Reporter-Partner":
+        all_nodes = cmdcodes_prefixed + reporters + partners_labeled
+        first_type, second_type, third_type = "hscode", "reporter", "partner"
+    elif node_order == "HS-Partner-Reporter":
+        all_nodes = cmdcodes_prefixed + partners_labeled + reporters
+        first_type, second_type, third_type = "hscode", "partner", "reporter"
+    elif node_order == "Partner-Reporter-HS":
+        all_nodes = partners_labeled + reporters + cmdcodes_prefixed
+        first_type, second_type, third_type = "partner", "reporter", "hscode"
+    elif node_order == "Partner-HS-Reporter":
+        all_nodes = partners_labeled + cmdcodes_prefixed + reporters
+        first_type, second_type, third_type = "partner", "hscode", "reporter"
+    else:  # 기본값: Reporter-HS-Partner
+        all_nodes = reporters + cmdcodes_prefixed + partners_labeled
+        first_type, second_type, third_type = "reporter", "hscode", "partner"
+    
     node_indices = {node: i for i, node in enumerate(all_nodes)}
     
     # 원본 cmdCode와 레이블 매핑
     cmdcode_to_label = {c: cmdcodes_prefixed[i] for i, c in enumerate(cmdcodes)}
     partner_to_label = {p: partners_labeled[i] for i, p in enumerate(partners)}
     
-    # 링크 1: Reporter → cmdCode
-    link1 = df_clean.groupby(['reporterName', 'cmdCode'])['netWgt (kg)'].sum().reset_index()
-    sources1 = [node_indices[r] for r in link1['reporterName']]
-    targets1 = [node_indices[cmdcode_to_label[c]] for c in link1['cmdCode']]
-    values1 = link1['netWgt (kg)'].tolist()
+    # 링크 생성 (node_order에 따라 동적으로 생성)
+    # 기본 3개의 링크 타입: Reporter-HS, HS-Partner, Reporter-Partner
     
-    # 링크 2: cmdCode → Partner
-    link2 = df_clean.groupby(['cmdCode', 'partnerName'])['netWgt (kg)'].sum().reset_index()
-    sources2 = [node_indices[cmdcode_to_label[c]] for c in link2['cmdCode']]
-    targets2 = [node_indices[partner_to_label[p]] for p in link2['partnerName']]
-    values2 = link2['netWgt (kg)'].tolist()
+    # Reporter-HS 링크
+    link_rep_hs = df_clean.groupby(['reporterName', 'cmdCode'])['netWgt (kg)'].sum().reset_index()
+    sources_rep_hs = [node_indices[r] for r in link_rep_hs['reporterName']]
+    targets_rep_hs = [node_indices[cmdcode_to_label[c]] for c in link_rep_hs['cmdCode']]
+    values_rep_hs = link_rep_hs['netWgt (kg)'].tolist()
     
-    # 모든 링크 결합
-    sources = sources1 + sources2
-    targets = targets1 + targets2
-    values = values1 + values2
+    # HS-Partner 링크
+    link_hs_ptn = df_clean.groupby(['cmdCode', 'partnerName'])['netWgt (kg)'].sum().reset_index()
+    sources_hs_ptn = [node_indices[cmdcode_to_label[c]] for c in link_hs_ptn['cmdCode']]
+    targets_hs_ptn = [node_indices[partner_to_label[p]] for p in link_hs_ptn['partnerName']]
+    values_hs_ptn = link_hs_ptn['netWgt (kg)'].tolist()
+    
+    # Reporter-Partner 링크
+    link_rep_ptn = df_clean.groupby(['reporterName', 'partnerName'])['netWgt (kg)'].sum().reset_index()
+    sources_rep_ptn = [node_indices[r] for r in link_rep_ptn['reporterName']]
+    targets_rep_ptn = [node_indices[partner_to_label[p]] for p in link_rep_ptn['partnerName']]
+    values_rep_ptn = link_rep_ptn['netWgt (kg)'].tolist()
+    
+    # 노드 순서에 따라 링크 선택
+    if node_order == "Reporter-HS-Partner":
+        sources = sources_rep_hs + sources_hs_ptn
+        targets = targets_rep_hs + targets_hs_ptn
+        values = values_rep_hs + values_hs_ptn
+    elif node_order == "Reporter-Partner-HS":
+        sources = sources_rep_ptn + sources_hs_ptn
+        targets = targets_rep_ptn + targets_hs_ptn
+        values = values_rep_ptn + values_hs_ptn
+    elif node_order == "HS-Reporter-Partner":
+        sources = sources_rep_hs + sources_rep_ptn
+        targets = targets_rep_hs + targets_rep_ptn
+        values = values_rep_hs + values_rep_ptn
+    elif node_order == "HS-Partner-Reporter":
+        sources = sources_hs_ptn + sources_rep_ptn
+        targets = targets_hs_ptn + targets_rep_ptn
+        values = values_hs_ptn + values_rep_ptn
+    elif node_order == "Partner-Reporter-HS":
+        sources = sources_rep_ptn + sources_rep_hs
+        targets = targets_rep_ptn + targets_rep_hs
+        values = values_rep_ptn + values_rep_hs
+    elif node_order == "Partner-HS-Reporter":
+        sources = sources_hs_ptn + sources_rep_hs
+        targets = targets_hs_ptn + targets_rep_hs
+        values = values_hs_ptn + values_rep_hs
+    else:  # 기본값
+        sources = sources_rep_hs + sources_hs_ptn
+        targets = targets_rep_hs + targets_hs_ptn
+        values = values_rep_hs + values_hs_ptn
     
     # 대륙별 색상 매핑 (Intra/Extra-EU27 포함)
     continent_colors = {
@@ -870,6 +931,33 @@ with st.sidebar:
         st.caption("비율 표시 (##.#%)")
         show_hscode_percentage = st.checkbox("HS Code 비율 표시", value=False)
         show_partner_percentage = st.checkbox("Partner 비율 표시", value=False)
+        
+        st.caption("Partner 정렬 순서")
+        partner_sort_order = st.radio(
+            "중량 기준 정렬:",
+            ["내림차순 (큰 값 → 작은 값)", "오름차순 (작은 값 → 큰 값)"],
+            index=0,
+            key="partner_sort_order"
+        )
+        # 내부적으로 사용할 값으로 변환
+        partner_sort = "descending" if "내림차순" in partner_sort_order else "ascending"
+        
+        st.caption("노드 순서 변경")
+        node_order = st.selectbox(
+            "다이어그램 흐름 방향:",
+            [
+                "Reporter → HS Code → Partner",
+                "Reporter → Partner → HS Code",
+                "HS Code → Reporter → Partner",
+                "HS Code → Partner → Reporter",
+                "Partner → Reporter → HS Code",
+                "Partner → HS Code → Reporter"
+            ],
+            index=0,
+            key="node_order_select"
+        )
+        # 내부적으로 사용할 값으로 변환 (공백 제거)
+        node_order_value = node_order.replace(" ", "").replace("→", "-").replace("HSCode", "HS").replace("Partner", "Partner")
 
 
 
@@ -1080,6 +1168,8 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
             merge_eu27_reporter=merge_eu27,
             show_hscode_percentage=show_hscode_percentage,
             show_partner_percentage=show_partner_percentage,
+            partner_sort_order=partner_sort,
+            node_order=node_order_value,
             top_n_partners=top_n
         )
         if fig:
@@ -1103,6 +1193,8 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
                 merge_eu27_reporter=merge_eu27,
                 show_hscode_percentage=show_hscode_percentage,
                 show_partner_percentage=show_partner_percentage,
+                partner_sort_order=partner_sort,
+                node_order=node_order_value,
                 top_n_partners=top_n
             )
             
