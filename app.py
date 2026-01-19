@@ -1223,44 +1223,66 @@ if st.button("데이터 수집 시작", type="primary"):
             # 한글명 컬럼 추가
             final_df_with_korean = final_df.copy()
             
-            # Reporter 한글명 추가
-            final_df_with_korean['reporterNameKor'] = final_df_with_korean['reporterCode'].astype(str).map(COUNTRY_NAMES)
-            # 매핑되지 않은 경우 원래 이름 사용
-            final_df_with_korean['reporterNameKor'] = final_df_with_korean['reporterNameKor'].fillna(final_df_with_korean['reporterName'])
+            # Reporter 한글명 추가 (컬럼 체크)
+            if 'reporterCode' in final_df_with_korean.columns:
+                final_df_with_korean['reporterNameKor'] = final_df_with_korean['reporterCode'].astype(str).map(COUNTRY_NAMES)
+                # 매핑되지 않은 경우 처리
+                if 'reporterName' in final_df_with_korean.columns:
+                    final_df_with_korean['reporterNameKor'] = final_df_with_korean['reporterNameKor'].fillna(final_df_with_korean['reporterName'])
+                else:
+                    final_df_with_korean['reporterNameKor'] = final_df_with_korean['reporterNameKor'].fillna('')
             
-            # Partner 한글명 추가
-            final_df_with_korean['partnerNameKor'] = final_df_with_korean['partnerCode'].astype(str).map(COUNTRY_NAMES)
-            # 매핑되지 않은 경우 원래 이름 사용
-            final_df_with_korean['partnerNameKor'] = final_df_with_korean['partnerNameKor'].fillna(final_df_with_korean['partnerName'])
+            # Partner 한글명 추가 (컬럼 체크)
+            if 'partnerCode' in final_df_with_korean.columns:
+                final_df_with_korean['partnerNameKor'] = final_df_with_korean['partnerCode'].astype(str).map(COUNTRY_NAMES)
+                # 매핑되지 않은 경우 처리
+                if 'partnerName' in final_df_with_korean.columns:
+                    final_df_with_korean['partnerNameKor'] = final_df_with_korean['partnerNameKor'].fillna(final_df_with_korean['partnerName'])
+                else:
+                    final_df_with_korean['partnerNameKor'] = final_df_with_korean['partnerNameKor'].fillna('')
             
-            # HS Code 한글명 추가
-            hs_code_korean_map = {
-                "0201": "냉장쇠고기",
-                "0202": "냉동쇠고기"
-            }
-            final_df_with_korean['cmdCodeKor'] = final_df_with_korean['cmdCode'].astype(str).map(hs_code_korean_map)
-            # 매핑되지 않은 경우 빈 값
-            final_df_with_korean['cmdCodeKor'] = final_df_with_korean['cmdCodeKor'].fillna('')
+            # HS Code 한글명 추가 (컬럼 체크)
+            if 'cmdCode' in final_df_with_korean.columns:
+                hs_code_korean_map = {
+                    "0201": "냉장쇠고기",
+                    "0202": "냉동쇠고기"
+                }
+                final_df_with_korean['cmdCodeKor'] = final_df_with_korean['cmdCode'].astype(str).map(hs_code_korean_map)
+                # 매핑되지 않은 경우 빈 값
+                final_df_with_korean['cmdCodeKor'] = final_df_with_korean['cmdCodeKor'].fillna('')
             
             # 컬럼 순서 재배치 (한글명을 원래 컬럼 바로 뒤에 배치)
             cols = list(final_df_with_korean.columns)
             
             # reporterCode, reporterName 뒤에 reporterNameKor 삽입
-            if 'reporterCode' in cols and 'reporterNameKor' in cols:
+            if 'reporterNameKor' in cols:
                 cols.remove('reporterNameKor')
-                reporter_idx = cols.index('reporterName') + 1 if 'reporterName' in cols else cols.index('reporterCode') + 1
+                if 'reporterName' in cols:
+                    reporter_idx = cols.index('reporterName') + 1
+                elif 'reporterCode' in cols:
+                    reporter_idx = cols.index('reporterCode') + 1
+                else:
+                    reporter_idx = len(cols)
                 cols.insert(reporter_idx, 'reporterNameKor')
             
             # partnerCode, partnerName 뒤에 partnerNameKor 삽입
-            if 'partnerCode' in cols and 'partnerNameKor' in cols:
+            if 'partnerNameKor' in cols:
                 cols.remove('partnerNameKor')
-                partner_idx = cols.index('partnerName') + 1 if 'partnerName' in cols else cols.index('partnerCode') + 1
+                if 'partnerName' in cols:
+                    partner_idx = cols.index('partnerName') + 1
+                elif 'partnerCode' in cols:
+                    partner_idx = cols.index('partnerCode') + 1
+                else:
+                    partner_idx = len(cols)
                 cols.insert(partner_idx, 'partnerNameKor')
             
             # cmdCode 뒤에 cmdCodeKor 삽입
-            if 'cmdCode' in cols and 'cmdCodeKor' in cols:
+            if 'cmdCodeKor' in cols:
                 cols.remove('cmdCodeKor')
-                cmd_idx = cols.index('cmdCode') + 1
+                if 'cmdCode' in cols:
+                    cmd_idx = cols.index('cmdCode') + 1
+                else:
+                    cmd_idx = len(cols)
                 cols.insert(cmd_idx, 'cmdCodeKor')
             
             final_df_with_korean = final_df_with_korean[cols]
