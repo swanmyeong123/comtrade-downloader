@@ -855,6 +855,14 @@ def create_alluvial_diagram(df, font_size=20,
     reporters = df_clean['reporterName'].unique().tolist()
     cmdcodes = df_clean['cmdCode'].unique().tolist()
     
+    # TOP5 모드에서 World(전세계) 제외 - partnerCode "0" 또는 partnerName이 "World"인 경우
+    if top_n_partners is not None:
+        # partnerCode가 있는 경우 코드로 필터링
+        if 'partnerCode' in df_clean.columns:
+            df_clean = df_clean[df_clean['partnerCode'].astype(str) != '0'].copy()
+        # partnerName으로 필터링 (World 제외)
+        df_clean = df_clean[~df_clean['partnerName'].str.contains('World', case=False, na=False)].copy()
+    
     # Partner를 물량 기준 정렬 (ascending/descending)
     ascending_order = (partner_sort_order == "ascending")
     partner_volumes = df_clean.groupby('partnerName')['netWgt (kg)'].sum().sort_values(ascending=ascending_order)
