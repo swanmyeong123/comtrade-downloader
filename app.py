@@ -545,10 +545,8 @@ YEAR_OPTIONS = [str(y) for y in range(current_year, 1999, -1)]
 def get_comtrade_data(api_key, hs_code, single_year, reporter_code, partner_code, flow_code):
     headers = {"Ocp-Apim-Subscription-Key": api_key}
     
-    # EU 역외 계산 모드일 경우: World(0)와 EU27 국가들을 모두 요청
-    if partner_code == "EXTRA_EU_CALC":
-        actual_partner = "0," + EU27_STR
-    elif partner_code == "ALL_CONTINENTS":
+    # 대륙별 통합 모드일 경우: 모든 대륙 국가 코드 전달
+    if partner_code == "ALL_CONTINENTS":
         actual_partner = ",".join(ALL_CONTINENT_CODES)
     else:
         actual_partner = partner_code
@@ -573,50 +571,12 @@ def get_comtrade_data(api_key, hs_code, single_year, reporter_code, partner_code
         
         data = response.json()
         if 'data' in data and len(data['data']) > 0:
-            df = pd.DataFrame(data['data'])
-            
-            # EU 역외 교역 계산 (World - EU_Sum)
-            if partner_code == "EXTRA_EU_CALC":
-                return calculate_extra_eu(df)
-            else:
-                return df
+            return pd.DataFrame(data['data'])
         else:
             return pd.DataFrame()
             
     except Exception as e:
         print(f"Error (HS:{hs_code}): {e}")
-        return pd.DataFrame()
-
-def calculate_extra_eu(df):
-    """
-    World 데이터에서 EU27 국가들의 데이터를 뺀 값을 계산하여 반환
-    """
-    try:
-        df['primaryValue'] = pd.to_numeric(df['primaryValue'], errors='coerce').fillna(0)
-        df['partnerCode'] = df['partnerCode'].astype(str)
-        
-        df_world = df[df['partnerCode'] == '0'].copy()
-        df_eu = df[df['partnerCode'].isin(EU27_LIST)].copy()
-        
-        group_cols = ['reporterCode', 'reporterDesc', 'period', 'flowCode', 'flowDesc', 'cmdCode', 'cmdDesc']
-        
-        # EU 합계
-        df_eu_sum = df_eu.groupby(group_cols)['primaryValue'].sum().reset_index()
-        df_eu_sum = df_eu_sum.rename(columns={'primaryValue': 'euValue'})
-        
-        # 병합 및 차감
-        merged = pd.merge(df_world, df_eu_sum, on=group_cols, how='left')
-        merged['euValue'] = merged['euValue'].fillna(0)
-        merged['extraEuValue'] = merged['primaryValue'] - merged['euValue']
-        
-        merged['primaryValue'] = merged['extraEuValue']
-        merged['partnerCode'] = 'EXTRA_EU'
-        merged['partnerDesc'] = 'EU27 Extra (Calculated)'
-        
-        return merged.drop(columns=['euValue', 'extraEuValue'])
-
-    except Exception as e:
-        print(f"Calculation Error: {e}")
         return pd.DataFrame()
 
 def preprocess_dataframe(df, original_hs_codes):
@@ -1260,8 +1220,6 @@ with col2:
             st.success("💡 [자동 그룹화] 물량 기준 상위 5개국 표시, 나머지는 '기타'로 통합")
             # TOP5_AUTO 모드일 경우 전체 국가 API 요청 (0 = World)
             partner_code_val = "0"
-        elif quick_select.startswith("★"):
-            st.success("💡 [자동 계산] World - EU27 = EU 역외 실적 산출")
         else:
             display_code = (partner_code_val[:30] + '...') if len(partner_code_val) > 30 else partner_code_val
             st.caption(f"Code: {display_code}")
