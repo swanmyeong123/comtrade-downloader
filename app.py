@@ -311,7 +311,6 @@ PARTNER_GROUPS = {
     "🌍 오세아니아 (Oceania)": ",".join(CONTINENT_OCEANIA),
     "--- 기존 선택 ---": "SEPARATOR",
     "🔝 상위 5개국 + 기타 (Top 5 + Others)": "TOP5_AUTO",
-    "★ EU 27 역외 (Extra-EU) [World - EU27]": "EXTRA_EU_CALC", 
     "전 세계 합계 (World Total)": "0",
     "EU 27 (역내 교역)": EU27_STR,
     "CPTPP (11개국 - 영국 미포함)": CPTPP_11_STR,
@@ -856,12 +855,23 @@ def create_alluvial_diagram(df, font_size=20,
     cmdcodes = df_clean['cmdCode'].unique().tolist()
     
     # TOP5 모드에서 World(전세계) 제외 - partnerCode "0" 또는 partnerName이 "World"인 경우
+    # 하지만 개별 국가 데이터가 없으면 World를 유지 (백업)
+    world_filtered = False  # World 필터링 여부 추적
     if top_n_partners is not None:
         # partnerCode가 있는 경우 코드로 필터링
         if 'partnerCode' in df_clean.columns:
-            df_clean = df_clean[df_clean['partnerCode'].astype(str) != '0'].copy()
+            df_no_world = df_clean[df_clean['partnerCode'].astype(str) != '0'].copy()
+        else:
+            df_no_world = df_clean.copy()
+        
         # partnerName으로 필터링 (World 제외)
-        df_clean = df_clean[~df_clean['partnerName'].str.contains('World', case=False, na=False)].copy()
+        df_no_world = df_no_world[~df_no_world['partnerName'].str.contains('World', case=False, na=False)].copy()
+        
+        # 개별 국가 데이터가 있으면 사용, 없으면 World 유지
+        if len(df_no_world) > 0:
+            df_clean = df_no_world
+            world_filtered = True
+        # else: World 데이터 유지 (경고는 다이어그램 생성 후 표시)
     
     # Partner를 물량 기준 정렬 (ascending/descending)
     ascending_order = (partner_sort_order == "ascending")
@@ -1315,6 +1325,14 @@ if st.button("데이터 수집 시작", type="primary"):
         # 원본 HS 코드 형식 보존 (중복 제거 전)
         original_hs_codes = [c for c in hs_codes if c]
         hs_codes = list(set(original_hs_codes))
+        
+        # TOP5 모드에서 HS 코드 길이 검사
+        if quick_select and quick_select.startswith("🔝"):
+            short_hs_codes = [hs for hs in hs_codes if len(str(hs).strip()) < 4]
+            if short_hs_codes:
+                st.warning(f"⚠️ HS 2자리 코드 감지: {', '.join(short_hs_codes[:3])}{'...' if len(short_hs_codes) > 3 else ''}\n\n"
+                          f"상위 N개국 분석은 HS 4자리 이상에서 더 정확합니다. 일부 품목은 World 합계만 표시될 수 있습니다.")
+        
         target_years = sorted(selected_years, reverse=True)
         
         # 보고 국가 분할 (안전 요청)
