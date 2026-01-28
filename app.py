@@ -711,6 +711,78 @@ def preprocess_dataframe(df, original_hs_codes):
     
     return result
 
+def remove_duplicates_with_report(df):
+    """
+    데이터프레임에서 완전히 중복된 행을 제거하고 중복 제거 리포트 생성
+    
+    완전히 동일한 행(모든 열의 값이 같은 경우)만 제거하며, 첫 번째 발견된 행을 유지합니다.
+    
+    Parameters:
+    - df: 원본 데이터프레임
+    
+    Returns:
+    - cleaned_df: 중복 제거된 데이터프레임
+    - report: 중복 제거 리포트 딕셔너리
+        - original_count: 원본 데이터 건수
+        - cleaned_count: 중복 제거 후 데이터 건수
+        - duplicates_removed: 제거된 중복 건수
+        - reporter_duplicates: Reporter별 중복 제거 상세 정보
+    """
+    if df.empty:
+        return df, {
+            'original_count': 0,
+            'cleaned_count': 0,
+            'duplicates_removed': 0,
+            'reporter_duplicates': {}
+        }
+    
+    # 중복 제거 전 통계
+    original_count = len(df)
+    
+    # Reporter별 중복 통계 (제거 전)
+    # reporterCode 열이 없는 경우 처리
+    if 'reporterCode' in df.columns:
+        reporter_counts_before = df.groupby('reporterCode').size().to_dict()
+    else:
+        reporter_counts_before = {}
+    
+    # 완전히 중복된 행 제거 (모든 열이 동일한 경우, 첫 번째 행 유지)
+    cleaned_df = df.drop_duplicates(keep='first')
+    
+    # 중복 제거 후 통계
+    cleaned_count = len(cleaned_df)
+    duplicates_removed = original_count - cleaned_count
+    
+    # Reporter별 중복 통계 (제거 후)
+    if 'reporterCode' in cleaned_df.columns:
+        reporter_counts_after = cleaned_df.groupby('reporterCode').size().to_dict()
+    else:
+        reporter_counts_after = {}
+    
+    # Reporter별 중복 제거 개수 계산
+    reporter_duplicates = {}
+    for reporter in reporter_counts_before:
+        before = reporter_counts_before[reporter]
+        after = reporter_counts_after.get(reporter, 0)
+        removed = before - after
+        if removed > 0:
+            reporter_duplicates[reporter] = {
+                'before': before,
+                'after': after,
+                'removed': removed
+            }
+    
+    # 리포트 생성
+    report = {
+        'original_count': original_count,
+        'cleaned_count': cleaned_count,
+        'duplicates_removed': duplicates_removed,
+        'reporter_duplicates': reporter_duplicates
+    }
+    
+    return cleaned_df, report
+
+
 def create_alluvial_diagram(df, font_size=20,
                             reporter_color='#2E86AB', 
                             hscode_color='#A23B72', partner_color='#F18F01',
@@ -1329,9 +1401,34 @@ if st.button("데이터 수집 시작", type="primary"):
             final_df = pd.concat(all_data, ignore_index=True)
             
             # 데이터 전처리 (열 정리)
-            final_df = preprocess_dataframe(final_df, original_hs_codes)
+            final_df_preprocessed = preprocess_dataframe(final_df, original_hs_codes)
             
-            st.success(f"수집 성공! 총 {len(final_df)} 건.")
+            # ✅ 중복 제거 수행
+            final_df, dedup_report = remove_duplicates_with_report(final_df_preprocessed)
+            
+            # 중복 제거 결과 표시
+            if dedup_report['duplicates_removed'] > 0:
+                st.warning(f"⚠️ **중복 데이터 검출 및 제거 완료**: {dedup_report['original_count']:,} 건 → {dedup_report['cleaned_count']:,} 건 (중복 {dedup_report['duplicates_removed']:,} 건 제거)")
+                
+                # Reporter별 중복 상세 정보
+                if dedup_report['reporter_duplicates']:
+                    with st.expander("📋 Reporter별 중복 제거 상세 정보"):
+                        st.caption("완전히 동일한 행(모든 열 값이 같은 행)만 제거되었습니다.")
+                        
+                        # Reporter 코드별로 정렬하여 표시
+                        sorted_reporters = sorted(dedup_report['reporter_duplicates'].items(), 
+                                                key=lambda x: x[1]['removed'], reverse=True)
+                        
+                        for reporter_code, stats in sorted_reporters:
+                            # Reporter 이름 가져오기 (한글명 우선)
+                            reporter_name = COUNTRY_NAMES.get(reporter_code, "")
+                            if not reporter_name:
+                                reporter_name = COUNTRY_NAMES_ENG.get(reporter_code, reporter_code)
+                            
+                            st.write(f"**{reporter_name} ({reporter_code})**: {stats['before']:,} → {stats['after']:,} 건 "
+                                   f"(중복 {stats['removed']:,} 건 제거)")
+            else:
+                st.success(f"✅ 수집 성공! 총 {len(final_df):,} 건 (중복 데이터 없음)")
             
             # 미리보기
             st.dataframe(final_df.head())
