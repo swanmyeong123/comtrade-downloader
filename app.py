@@ -846,16 +846,19 @@ def create_alluvial_diagram(df, font_size=20,
     
     # EU27 Reporter 통합 (EU27 국가를 "EU27"로 표시)
     if merge_eu27_reporter and 'reporterCode' in df_clean.columns:
-        df_clean['reporterName'] = df_clean['reporterCode'].apply(
-            lambda x: "EU27" if str(x).zfill(3) in EU27_LIST else df_clean.loc[df_clean['reporterCode'] == x, 'reporterName'].iloc[0] if len(df_clean.loc[df_clean['reporterCode'] == x, 'reporterName']) > 0 else str(x)
-        )
-        # 더 간단한 방식으로 재작성
+        # EU27 국가들을 "EU27"로 이름 변경
         def get_reporter_display(row):
             code = str(row['reporterCode']).zfill(3)
             if code in EU27_LIST:
                 return "EU27"
             return row['reporterName']
         df_clean['reporterName'] = df_clean.apply(get_reporter_display, axis=1)
+        
+        # ✅ EU27로 통합된 reporter들의 데이터를 그룹화하여 합산
+        # partnerName 또는 partnerCode 컬럼 확인
+        partner_col = 'partnerName' if 'partnerName' in df_clean.columns else 'partnerCode'
+        df_grouped = df_clean.groupby(['reporterName', 'cmdCode', partner_col])['netWgt (kg)'].sum().reset_index()
+        df_clean = df_grouped
     
     # 대륙별 그룹화 적용 (유럽을 Intra/Extra-EU27로 분리)
     if group_by_continent and 'partnerCode' in df_clean.columns:
