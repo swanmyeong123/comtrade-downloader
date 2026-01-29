@@ -861,9 +861,15 @@ def create_alluvial_diagram(df, font_size=20,
         df_clean['reporterDisplay'] = df_clean.apply(get_reporter_continent_display, axis=1)
         
         # ✅ EU27로 통합된 reporter들의 데이터를 그룹화하여 합산
-        # partnerName 또는 partnerCode 컬럼 확인
-        partner_col = 'partnerName' if 'partnerName' in df_clean.columns else 'partnerCode'
-        df_grouped = df_clean.groupby(['reporterDisplay', 'cmdCode', partner_col])['netWgt (kg)'].sum().reset_index()
+        # partnerCode를 유지하면서 partnerName도 함께 사용
+        if 'partnerCode' in df_clean.columns and 'partnerName' in df_clean.columns:
+            # partnerCode와 partnerName 모두 유지 (대륙별 그룹화를 위해)
+            df_grouped = df_clean.groupby(['reporterDisplay', 'cmdCode', 'partnerCode', 'partnerName'])['netWgt (kg)'].sum().reset_index()
+        elif 'partnerCode' in df_clean.columns:
+            df_grouped = df_clean.groupby(['reporterDisplay', 'cmdCode', 'partnerCode'])['netWgt (kg)'].sum().reset_index()
+        else:
+            partner_col = 'partnerName'
+            df_grouped = df_clean.groupby(['reporterDisplay', 'cmdCode', partner_col])['netWgt (kg)'].sum().reset_index()
         # reporterDisplay를 reporterName으로 사용
         df_grouped = df_grouped.rename(columns={'reporterDisplay': 'reporterName'})
         df_clean = df_grouped
@@ -962,10 +968,8 @@ def create_alluvial_diagram(df, font_size=20,
     for r in reporters:
         # ✅ EU27 특별 처리: merge_eu27_reporter가 True일 때 "EU27"로 통합됨
         if r == "EU27":
-            if use_korean_labels:
-                reporters_display.append("유럽연합27")
-            else:
-                reporters_display.append("EU27")
+            # 한글/영문 모두 "EU27"로 표시
+            reporters_display.append("EU27")
         elif use_korean_labels:
             # reporterName에서 코드를 찾고, 코드로 한글명 조회
             code = reporter_name_to_code.get(r, '')
@@ -1499,7 +1503,7 @@ if st.button("데이터 수집 시작", type="primary"):
             # 세션 상태에 데이터 저장 (다이어그램 설정 변경 시 재사용)
             st.session_state['final_df'] = final_df
             st.session_state['partner_mode'] = partner_code_val
-            st.session_state['reporter_code'] = reporter_code  # EU27 판단용
+            st.session_state['saved_reporter_group'] = reporter_quick_select  # EU27 판단용 (위젯 키와 분리)
             st.session_state['quick_select'] = quick_select  # TOP5_AUTO 판단용
         else:
             st.warning("데이터가 없습니다.")
@@ -1511,11 +1515,13 @@ if 'final_df' in st.session_state and not st.session_state['final_df'].empty:
     st.caption("두께: 물량 (kg) 기준")
     
     # 대륙별 그룹화 여부 확인
-    group_by_continent = st.session_state.get('partner_mode') == 'ALL_CONTINENTS'
+    partner_mode = st.session_state.get('partner_mode', '')
+    group_by_continent = (partner_mode == 'ALL_CONTINENTS')
     
-    # EU27 Reporter 통합 여부 확인 (EU27 전체 선택 시)
-    saved_reporter = st.session_state.get('reporter_code', '')
-    merge_eu27 = (saved_reporter == EU27_STR)
+    # EU27 Reporter 통합 여부 확인 (EU27 전체 선택 시 - 그룹명으로 판단)
+    saved_reporter_group = st.session_state.get('saved_reporter_group', '')
+    # ✅ EU27 그룹 선택 여부 확인 ("EU 27 전체 (All EU Members)" 문자열 비교)
+    merge_eu27 = (saved_reporter_group == 'EU 27 전체 (All EU Members)')
     
     # TOP5_AUTO 모드 확인 (상위 5개국 + 기타)
     saved_quick_select = st.session_state.get('quick_select', '')
