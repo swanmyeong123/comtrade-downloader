@@ -945,16 +945,28 @@ def create_alluvial_diagram(df, font_size=20,
     hscode_volumes = df_clean.groupby('cmdCode')['netWgt (kg)'].sum()
     
     # Reporter 한글 변환 (use_korean_labels=True 시)
-    # reporterName과 reporterCode의 매핑이 필요
-    if 'reporterCode' in df.columns:
-        # 원본 df에서 reporterName -> reporterCode 매핑 생성
-        reporter_name_to_code = dict(zip(df['reporterName'].unique(), df['reporterCode'].unique()))
+    # EU27 통합된 경우 "EU27" 문자열을 직접 처리하고, 개별 국가는 매핑 사용
+    if 'reporterCode' in df.columns and 'reporterName' in df.columns:
+        # ✅ DataFrame 기반 안전한 매핑 생성 (zip 대신 사용)
+        # reporterName과 reporterCode의 실제 대응 관계 유지
+        reporter_name_to_code = (
+            df[['reporterName', 'reporterCode']]
+            .drop_duplicates()
+            .set_index('reporterName')['reporterCode']
+            .to_dict()
+        )
     else:
         reporter_name_to_code = {}
     
     reporters_display = []
     for r in reporters:
-        if use_korean_labels:
+        # ✅ EU27 특별 처리: merge_eu27_reporter가 True일 때 "EU27"로 통합됨
+        if r == "EU27":
+            if use_korean_labels:
+                reporters_display.append("유럽연합27")
+            else:
+                reporters_display.append("EU27")
+        elif use_korean_labels:
             # reporterName에서 코드를 찾고, 코드로 한글명 조회
             code = reporter_name_to_code.get(r, '')
             code_str = str(code).zfill(3) if code else ''
