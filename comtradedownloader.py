@@ -546,8 +546,8 @@ YEAR_OPTIONS = [str(y) for y in range(current_year, 1999, -1)]
 def get_comtrade_data(api_key, hs_code, single_year, reporter_code, partner_code, flow_code):
     headers = {"Ocp-Apim-Subscription-Key": api_key}
     
-    # 대륙별 통합 모드일 경우: 모든 대륙 국가 코드 전달
-    if partner_code == "ALL_CONTINENTS":
+    # 대륙별 통합 또는 상위N 모드: 모든 개별 국가 코드 전달 (partnerCode=0은 World 집계이므로 사용 불가)
+    if partner_code in ("ALL_CONTINENTS", "TOP_N_ALL"):
         actual_partner = ",".join(ALL_CONTINENT_CODES)
     else:
         actual_partner = partner_code
@@ -784,166 +784,164 @@ def remove_duplicates_with_report(df):
     return cleaned_df, report
 
 
+def _fmt_wgt(kg):
+    """물량 숫자를 한국어 단위로 변환."""
+    if kg >= 1_000_000_000:
+        return f"{kg/1_000_000_000:,.2f}백만 톤"
+    elif kg >= 1_000_000:
+        return f"{kg/1_000_000:,.1f}천 톤"
+    elif kg >= 1_000:
+        return f"{kg/1_000:,.1f}톤"
+    else:
+        return f"{kg:,.0f}kg"
+
+def _fmt_val(usd):
+    """금액 숫자를 한국어 단위로 변환."""
+    if usd >= 1_000_000_000:
+        return f"USD {usd/1_000_000_000:,.2f}십억"
+    elif usd >= 1_000_000:
+        return f"USD {usd/1_000_000:,.1f}백만"
+    elif usd >= 1_000:
+        return f"USD {usd/1_000:,.0f}천"
+    else:
+        return f"USD {usd:,.0f}"
+
 def generate_trend_report(df):
     """
-    조회된 무역 데이터를 바탕으로 동향 보고서 HTML 생성.
-    - 총 교역 규모 (물량·금액)
-    - 주요 상대국 TOP 5
-    - 연도별 추이 (복수 연도)
-    - 대륙별 현황
+    조회된 무역 데이터를 바탕으로 줄글(prose) 형식의 동향 보고서를 생성.
+    핵심 수치는 **볼드** 마크다운으로 표시하여 복사·붙여넣기에 용이.
     """
     if df is None or df.empty:
         return None
 
-    wgt_col = "netWgt (kg)"   if "netWgt (kg)"        in df.columns else None
+    wgt_col = "netWgt (kg)"        if "netWgt (kg)"        in df.columns else None
     val_col = "primaryValue (USD)" if "primaryValue (USD)" in df.columns else None
 
-    # ── 공통 수치 ──────────────────────────────────
-    years       = sorted(df["period"].astype(str).unique()) if "period" in df.columns else []
-    hs_codes    = sorted(df["cmdCode"].astype(str).unique()) if "cmdCode" in df.columns else []
-    flow_labels = {"M": "수입", "X": "수출"}
-    flows       = [flow_labels.get(str(f), str(f))
-                   for f in df["flowCode"].unique()] if "flowCode" in df.columns else []
+    # ── 공통 기초 변수 ────────────────────────────
+    years    = sorted(df["period"].astype(str).unique()) if "period" in df.columns else []
+    hs_codes = sorted(df["cmdCode"].astype(str).unique()) if "cmdCode" in df.columns else []
+
+    flow_label_map = {"M": "수입", "X": "수출", "MX": "수출입"}
+    flows = []
+    if "flowCode" in df.columns:
+        for f in df["flowCode"].dropna().unique():
+            flows.append(flow_label_map.get(str(f).strip(), str(f)))
+    flow_str = "·".join(sorted(set(flows))) if flows else "교역"
 
     reporter_col = "reporterNameKor" if "reporterNameKor" in df.columns else "reporterName"
     partner_col  = "partnerNameKor"  if "partnerNameKor"  in df.columns else "partnerName"
     cont_col     = "partnerContinentKor" if "partnerContinentKor" in df.columns else "partnerContinent"
 
-    reporters = sorted(df[reporter_col].dropna().unique()) if reporter_col in df.columns else []
+    reporters   = sorted(df[reporter_col].dropna().unique()) if reporter_col in df.columns else []
+    rep_str     = ", ".join(reporters[:3]) + ("외" if len(reporters) > 3 else "")
+
+    hs_kor_map  = {k: v.split("(")[0].strip() for k, v in {**HS2_CODES, **HS4_CODES, **HS6_CODES}.items()}
+
+    def hs_label(code):
+        name = hs_kor_map.get(str(code).strip(), "")
+        return f"{name}(HS {code})" if name else f"HS {code}"
 
     total_wgt = df[wgt_col].sum() if wgt_col else None
     total_val = df[val_col].sum() if val_col else None
 
-    # HS 코드 한글명 매핑
-    hs_kor_map = {k: v.split("(")[0].strip() for k, v in {**HS2_CODES, **HS4_CODES, **HS6_CODES}.items()}
+    paras = []  # 단락 리스트
 
-    # ── HTML 조각 생성 헬퍼 ────────────────────────
-    def row(label, value, highlight=False):
-        color = "#F28E2B" if highlight else "#1C2537"
-        return (
-            f"<div style='display:flex;justify-content:space-between;"
-            f"padding:5px 0;border-bottom:1px solid #EEF1F5;'>"
-            f"<span style='color:#5E6E82;font-size:13px;'>{label}</span>"
-            f"<span style='color:{color};font-size:13px;font-weight:600;'>{value}</span></div>"
-        )
+    # ── 제목 ──────────────────────────────────────
+    year_str = years[0] if len(years) == 1 else f"{years[0]}~{years[-1]}"
+    hs_title = hs_label(hs_codes[0]) if len(hs_codes) == 1 else \
+               " · ".join(hs_label(c) for c in hs_codes[:3]) + ("외" if len(hs_codes) > 3 else "")
+    paras.append(f"#### {year_str}년 {rep_str} {hs_title} {flow_str} 동향\n")
 
-    def section_title(title):
-        return (
-            f"<div style='margin:16px 0 8px;font-size:13px;font-weight:700;"
-            f"color:#2E86AB;letter-spacing:0.3px;border-left:3px solid #2E86AB;"
-            f"padding-left:8px;'>{title}</div>"
-        )
-
-    blocks = []
-
-    # ── 1. 조회 개요 ───────────────────────────────
-    year_str = f"{years[0]}" if len(years) == 1 else f"{years[0]} ~ {years[-1]} ({len(years)}개년)"
-    hs_str   = ", ".join(hs_codes[:3]) + ("..." if len(hs_codes) > 3 else "")
-    rep_str  = ", ".join(reporters[:3]) + ("..." if len(reporters) > 3 else "")
-    flow_str = " · ".join(flows) if flows else "-"
-
-    blocks.append(section_title("조회 개요"))
-    blocks.append(row("기간",    year_str))
-    blocks.append(row("보고국",  rep_str  or "-"))
-    blocks.append(row("품목",    hs_str   or "-"))
-    blocks.append(row("교역구분", flow_str))
-
-    # ── 2. 총 교역 규모 ────────────────────────────
-    blocks.append(section_title("총 교역 규모"))
-    if total_wgt is not None:
-        if total_wgt >= 1_000_000:
-            wgt_disp = f"{total_wgt/1_000_000:,.1f} 천 톤"
+    # ── 1단락: 총 교역 규모 ───────────────────────
+    if total_wgt is not None and total_wgt > 0:
+        year_range = f"{years[0]}년" if len(years) == 1 else f"{years[0]}~{years[-1]}년"
+        wgt_str = _fmt_wgt(total_wgt)
+        p1 = f"{year_range} {rep_str}의 {hs_title} {flow_str}량은 총 **{wgt_str}**"
+        if total_val is not None and total_val > 0:
+            val_str = _fmt_val(total_val)
+            p1 += f"이며, {flow_str}액은 **{val_str}**에 달하였다."
         else:
-            wgt_disp = f"{total_wgt/1_000:,.1f} 톤"
-        blocks.append(row("총 물량", wgt_disp, highlight=True))
-    if total_val is not None:
-        if total_val >= 1_000_000:
-            val_disp = f"USD {total_val/1_000_000:,.1f}백만"
-        else:
-            val_disp = f"USD {total_val/1_000:,.0f}천"
-        blocks.append(row("총 금액", val_disp))
+            p1 += "으로 집계되었다."
+        paras.append(p1)
 
-    # ── 3. 주요 상대국 TOP 5 ───────────────────────
-    if wgt_col and partner_col in df.columns:
-        partner_wgt = (
-            df.groupby(partner_col, dropna=True)[wgt_col]
-            .sum().sort_values(ascending=False)
-        )
-        partner_wgt = partner_wgt[partner_wgt.index.str.strip() != ""]
-        top5 = partner_wgt.head(5)
-        if not top5.empty and total_wgt and total_wgt > 0:
-            blocks.append(section_title("주요 상대국 (물량 기준 TOP 5)"))
-            for rank, (nation, wgt) in enumerate(top5.items(), 1):
+    # ── 2단락: 주요 상대국 ────────────────────────
+    if wgt_col and partner_col in df.columns and total_wgt and total_wgt > 0:
+        pw = (df[df[partner_col].str.strip().ne("") & df[partner_col].notna()]
+              .groupby(partner_col, dropna=True)[wgt_col]
+              .sum().sort_values(ascending=False))
+        # World 집계 행 제외
+        pw = pw[~pw.index.str.lower().str.contains("world|전세계|세계", na=False)]
+        top5 = pw.head(5)
+        if len(top5) >= 1:
+            parts = []
+            for i, (nation, wgt) in enumerate(top5.items()):
                 pct = wgt / total_wgt * 100
-                if wgt >= 1_000_000:
-                    wgt_d = f"{wgt/1_000_000:,.1f}천 톤"
+                if i == 0:
+                    parts.append(f"**{nation}**(**{pct:.1f}%**)")
                 else:
-                    wgt_d = f"{wgt/1_000:,.1f}톤"
-                blocks.append(row(f"{rank}. {nation}", f"{wgt_d}  ({pct:.1f}%)"))
-
-    # ── 4. 연도별 추이 (복수 연도) ─────────────────
-    if wgt_col and len(years) > 1 and "period" in df.columns:
-        yearly = (
-            df.groupby(df["period"].astype(str))[wgt_col]
-            .sum().sort_index()
-        )
-        blocks.append(section_title("연도별 물량 추이"))
-        prev = None
-        for yr, wgt in yearly.items():
-            if wgt >= 1_000_000:
-                wgt_d = f"{wgt/1_000_000:,.1f}천 톤"
+                    parts.append(f"**{nation}**({pct:.1f}%)")
+            if len(parts) == 1:
+                p2 = f"주요 {flow_str} 상대국은 {parts[0]}으로 나타났다."
             else:
-                wgt_d = f"{wgt/1_000:,.1f}톤"
-            if prev is not None and prev > 0:
-                chg    = (wgt - prev) / prev * 100
-                sign   = "+" if chg >= 0 else ""
-                suffix = f"  ({sign}{chg:.1f}%)"
-            else:
-                suffix = ""
-            blocks.append(row(str(yr), wgt_d + suffix))
-            prev = wgt
+                p2 = (f"주요 {flow_str} 상대국은 {parts[0]}으로 전체의 "
+                      f"가장 큰 비중을 차지하였으며, " +
+                      ", ".join(parts[1:]) + " 순이었다.")
+            paras.append(p2)
 
-    # ── 5. 대륙별 현황 ─────────────────────────────
-    if wgt_col and cont_col in df.columns and total_wgt and total_wgt > 0:
-        cont_wgt = (
-            df.groupby(cont_col, dropna=True)[wgt_col]
-            .sum().sort_values(ascending=False)
-        )
-        cont_wgt = cont_wgt[cont_wgt.index.str.strip() != ""]
-        if not cont_wgt.empty:
-            blocks.append(section_title("대륙별 현황 (물량 기준)"))
-            for cont, wgt in cont_wgt.items():
-                pct = wgt / total_wgt * 100
-                if wgt >= 1_000_000:
-                    wgt_d = f"{wgt/1_000_000:,.1f}천 톤"
-                else:
-                    wgt_d = f"{wgt/1_000:,.1f}톤"
-                blocks.append(row(str(cont), f"{wgt_d}  ({pct:.1f}%)"))
-
-    # ── 6. HS 코드별 현황 (복수 품목) ─────────────
+    # ── 3단락: 복수 HS 품목별 현황 ───────────────
     if wgt_col and len(hs_codes) > 1 and "cmdCode" in df.columns and total_wgt and total_wgt > 0:
-        hs_wgt = (
-            df.groupby("cmdCode", dropna=True)[wgt_col]
-            .sum().sort_values(ascending=False)
-        )
-        blocks.append(section_title("품목별 현황 (물량 기준)"))
-        for hs, wgt in hs_wgt.items():
-            pct     = wgt / total_wgt * 100
-            hs_name = hs_kor_map.get(str(hs).strip(), "")
-            label   = f"{hs}  {hs_name}" if hs_name else str(hs)
-            if wgt >= 1_000_000:
-                wgt_d = f"{wgt/1_000_000:,.1f}천 톤"
-            else:
-                wgt_d = f"{wgt/1_000:,.1f}톤"
-            blocks.append(row(label, f"{wgt_d}  ({pct:.1f}%)"))
+        hw = (df.groupby("cmdCode", dropna=True)[wgt_col]
+              .sum().sort_values(ascending=False))
+        hs_parts = []
+        for code, wgt in hw.items():
+            pct = wgt / total_wgt * 100
+            hs_parts.append(f"{hs_label(code)} **{pct:.1f}%**")
+        p3 = "품목별로는 " + ", ".join(hs_parts[:4]) + \
+             ("외" if len(hs_parts) > 4 else "") + "의 구성을 보였다."
+        paras.append(p3)
 
-    content = "\n".join(blocks)
-    return (
-        "<div style='background:#FFFFFF;border:1px solid #DCE3ED;border-radius:8px;"
-        "padding:20px 24px;margin-top:8px;'>"
-        + content +
-        "</div>"
-    )
+    # ── 4단락: 복수 연도 추이 ─────────────────────
+    if wgt_col and len(years) > 1 and "period" in df.columns:
+        yr_wgt = (df.groupby(df["period"].astype(str))[wgt_col]
+                  .sum().sort_index())
+        yr_list = list(yr_wgt.items())
+        # 전체 추세 (첫 해 → 마지막 해)
+        first_yr, first_w = yr_list[0]
+        last_yr,  last_w  = yr_list[-1]
+        trend_dir = "증가" if last_w >= first_w else "감소"
+        if first_w > 0:
+            chg_rate = (last_w - first_w) / first_w * 100
+            trend_str = (f"**{_fmt_wgt(first_w)}**({first_yr}년)에서 "
+                         f"**{_fmt_wgt(last_w)}**({last_yr}년)로 {trend_dir}하였다"
+                         f"(연간 단순 증감률 **{chg_rate:+.1f}%**).")
+        else:
+            trend_str = f"{last_yr}년 기준 **{_fmt_wgt(last_w)}**."
+        # 연도별 상세 나열
+        yr_detail = []
+        for yr, wgt in yr_list:
+            yr_detail.append(f"{yr}년 **{_fmt_wgt(wgt)}**")
+        p4 = f"연도별 {flow_str}량은 " + ", ".join(yr_detail) + \
+             f"이며, 전체적으로 {trend_str}"
+        paras.append(p4)
+
+    # ── 5단락: 대륙별 현황 ───────────────────────
+    if wgt_col and cont_col in df.columns and total_wgt and total_wgt > 0:
+        cw = (df[df[cont_col].str.strip().ne("") & df[cont_col].notna()]
+              .groupby(cont_col, dropna=True)[wgt_col]
+              .sum().sort_values(ascending=False))
+        if not cw.empty:
+            c_parts = []
+            for cont, wgt in cw.head(4).items():
+                pct = wgt / total_wgt * 100
+                c_parts.append(f"**{cont}**({pct:.1f}%)")
+            p5 = "대륙별 비중은 " + ", ".join(c_parts) + \
+                 (" 등의 순으로 나타났다." if len(cw) > 1 else "으로 나타났다.")
+            paras.append(p5)
+
+    if not paras:
+        return None
+
+    return "\n\n".join(paras)
 
 
 def create_alluvial_diagram(df, font_size=20,
@@ -1684,7 +1682,7 @@ with col2:
                 f"물량 기준 상위 <b>{int(selected_top_n)}개국</b> 표시, 나머지 기타 통합</div>",
                 unsafe_allow_html=True
             )
-            partner_code_val = "0"
+            partner_code_val = "TOP_N_ALL"  # 모든 개별 국가 데이터 수집 (0=World 집계와 다름)
         else:
             display_code = (partner_code_val[:30] + "...") if len(partner_code_val) > 30 else partner_code_val
             st.caption(f"Code: {display_code}")
@@ -1936,11 +1934,13 @@ if "final_df" in st.session_state and not st.session_state["final_df"].empty:
 if "final_df" in st.session_state and not st.session_state["final_df"].empty:
     accent_divider()
     section_header("6", "동향 보고서")
-    st.caption("조회된 데이터의 주요 수치 및 특징을 자동으로 요약합니다.")
+    st.caption("조회된 데이터를 바탕으로 보고서 삽입용 줄글을 자동 생성합니다. 굵은 숫자를 복사·붙여넣기하세요.")
     try:
-        report_html = generate_trend_report(st.session_state["final_df"])
-        if report_html:
-            st.markdown(report_html, unsafe_allow_html=True)
+        prose = generate_trend_report(st.session_state["final_df"])
+        if prose:
+            st.markdown(prose)
+            with st.expander("복사용 텍스트 (Markdown 원문)"):
+                st.text_area("", value=prose, height=220, label_visibility="collapsed")
         else:
             st.info("보고서를 생성할 데이터가 없습니다.")
     except Exception as e:
